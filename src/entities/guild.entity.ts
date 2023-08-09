@@ -1,11 +1,4 @@
-import {
-  Entity,
-  Column,
-  PrimaryGeneratedColumn,
-  JoinColumn,
-  OneToOne,
-} from 'typeorm';
-import { Player } from './player.entity';
+import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity({ database: 'player' })
 export class Guild {
@@ -47,8 +40,4 @@ export class Guild {
 
   @Column()
   gold: string;
-
-  @OneToOne(() => Player)
-  @JoinColumn({ name: 'master', referencedColumnName: 'id' })
-  player: Player;
 }

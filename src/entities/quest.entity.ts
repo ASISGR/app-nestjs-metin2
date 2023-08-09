@@ -1,12 +1,4 @@
-import {
-  Entity,
-  Column,
-  PrimaryGeneratedColumn,
-  OneToMany,
-  ManyToOne,
-  JoinColumn,
-} from 'typeorm';
-import { Player } from './player.entity';
+import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity({ database: 'player' })
 export class Quest {
@@ -21,8 +13,4 @@ export class Quest {
 
   @Column({ type: 'int' })
   lValue: number;
-
-  @JoinColumn({ name: 'dwPID', referencedColumnName: 'id' })
-  @ManyToOne(() => Player, (player) => player.quests)
-  player: Player;
 }

@@ -11,6 +11,8 @@ import { ItemAttrRare } from 'src/entities/item_attr_rare.entity';
 import { ItemAttr } from 'src/entities/item_attr.entity';
 import { Guild } from 'src/entities/guild.entity';
 import { Quest } from 'src/entities/quest.entity';
+import { Safebox } from 'src/entities/safebox.entity';
+import { GuildMember } from 'src/entities/guild_member.entity';
 
 @Injectable()
 export class AppService {
@@ -192,30 +194,48 @@ export class AppService {
   }
 
   async userInformation(userId: any) {
-    const player = await this.playerRepository.find({
-      where: { account_id: userId },
-      relations: {
-        safebox: true,
-      },
-    });
+    const player = await this.playerRepository
+      .createQueryBuilder('player')
+      .select([
+        'player.name',
+        'player.level',
+        'player.playtime',
+        'player.account_id',
+        'playerIndex.empire',
+        'playerSafebox.password',
+        // 'player.playerIndex',
+      ])
+      // .leftJoinAndSelect('player.playerIndex', 'playerIndex')
+      // .leftJoinAndSelect('player.safebox', 'safebox')
+      .leftJoin(
+        PlayerIndex,
+        'playerIndex',
+        'player.account_id = playerIndex.id',
+      )
+      .leftJoin(
+        Safebox,
+        'playerSafebox',
+        'player.account_id = playerSafebox.account_id',
+      )
+      .where('player.account_id = :userId', { userId })
 
-    const playerIndex = await this.playerIndexRepository.findOne({
-      where: { id: userId },
-    });
+      .getRawMany();
+
+    const playtime = player
+      .reduce((oldValue: any, newValue: any) => {
+        return oldValue + newValue.player_playtime;
+      }, 0)
+      .toLocaleString();
 
     const players = player.map((res) => {
-      return res.name;
+      return res.player_name;
     });
-
-    const playtime = player.reduce((oldValue: any, newValue: any) => {
-      return oldValue + newValue.playtime;
-    }, 0);
 
     return {
       players: players,
-      empire: playerIndex.empire,
+      empire: player[0].playerIndex_empire,
       playtime: playtime,
-      safebox_password: player[0].safebox,
+      safebox_password: player[0].playerSafebox_password,
     };
   }
 
@@ -257,12 +277,6 @@ export class AppService {
   }
 
   async top10Players() {
-    /* const topPlayers = await this.playerRepository.find({
-      where: { name: 'Zoeasy' },
-      relations: { quests: true },
-      
-    });*/
-
     const topPlayers = await this.playerRepository
       .createQueryBuilder('player')
       .select([
@@ -271,12 +285,25 @@ export class AppService {
         'player.playtime',
         'player.exp',
         'player.horse_level',
-        'player_index.empire AS empire',
-        'guild.name AS guild_name',
+        'playerIndex.empire',
+        'playerGuild.name',
         `CONCAT('Βιολόγος ', MAX(collect_quest_lv)) AS highest_collect_quest_lv`,
       ])
-      .leftJoin('player.guild', 'guild')
-      .leftJoin('player.playerIndex', 'player_index')
+      .leftJoin(
+        PlayerIndex,
+        'playerIndex',
+        'player.account_id = playerIndex.id',
+      )
+      .leftJoin(
+        GuildMember,
+        'playerGuildMember',
+        'player.id = playerGuildMember.pid',
+      )
+      .leftJoin(
+        Guild,
+        'playerGuild',
+        'playerGuildMember.guild_id = playerGuild.id ',
+      )
       .leftJoin(
         (subQuery) =>
           subQuery
@@ -284,22 +311,20 @@ export class AppService {
               'dwPID',
               "REPLACE(SUBSTRING_INDEX(szName, '_', -1), 'lv', '') + 0 AS collect_quest_lv",
             ])
-            .from(Quest, 'q')
-            .where("q.szName LIKE 'collect_quest_lv%'"),
+            .from(Quest, 'quest')
+            .where("quest.szName LIKE 'collect_quest_lv%'"),
         'collect_quest_lv',
         'collect_quest_lv.dwPID = player.id',
       )
       .where("player.name NOT LIKE '%[%' AND player.name NOT LIKE '%]%'")
-      .groupBy(
-        'player.name, player.level, player.playtime, player_index.empire, guild.name',
-      )
+      .groupBy('player.name, player.level, player.playtime, playerIndex.empire')
       .orderBy('player.level', 'DESC')
       .addOrderBy('MAX(collect_quest_lv)', 'DESC')
       .addOrderBy('player.playtime', 'DESC')
+      .limit(10)
       .getRawMany();
 
     for (let i = 0; i < topPlayers.length; i++) {
-      console.log(i);
       topPlayers[i].player_playtime =
         topPlayers[i].player_playtime.toLocaleString();
 

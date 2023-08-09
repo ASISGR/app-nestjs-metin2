@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Account } from 'src/entities/account.entity';
 import { Guild } from 'src/entities/guild.entity';
+import { GuildMember } from 'src/entities/guild_member.entity';
 import { Item } from 'src/entities/item.entity';
 import { ItemAttr } from 'src/entities/item_attr.entity';
 import { ItemAttrRare } from 'src/entities/item_attr_rare.entity';
@@ -33,6 +34,7 @@ require('dotenv').config();
         ItemAttr,
         ItemAttrRare,
         Quest,
+        GuildMember,
       ],
       synchronize: false,
     }),

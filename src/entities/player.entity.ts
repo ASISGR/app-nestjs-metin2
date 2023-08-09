@@ -1,16 +1,4 @@
-import {
-  Entity,
-  Column,
-  PrimaryGeneratedColumn,
-  OneToOne,
-  JoinColumn,
-  ManyToOne,
-  OneToMany,
-} from 'typeorm';
-import { Safebox } from './safebox.entity';
-import { PlayerIndex } from './playerIndex.entity';
-import { Guild } from './guild.entity';
-import { Quest } from './quest.entity';
+import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity({ database: 'player' })
 export class Player {
@@ -160,20 +148,4 @@ export class Player {
 
   @Column()
   horse_skill_point: string;
-
-  @ManyToOne(() => Safebox)
-  @JoinColumn({ name: 'account_id', referencedColumnName: 'account_id' })
-  safebox: Safebox;
-
-  @ManyToOne(() => Guild)
-  @JoinColumn({ name: 'id', referencedColumnName: 'master' })
-  guild: Guild;
-
-  @ManyToOne(() => PlayerIndex)
-  @JoinColumn({ name: 'account_id', referencedColumnName: 'id' })
-  playerIndex: PlayerIndex;
-
-  //@JoinColumn({ name: 'id', referencedColumnName: 'dwPID' })
-  @OneToMany(() => Quest, (quest) => quest.player)
-  quests: Quest[];
 }

@@ -69,6 +69,7 @@ export class AppController {
   @HttpCode(200)
   @Post('sendMail')
   async sendMail() {
+    //  const info = await this.appService.userInformation(1);
     const guilds = await this.appService.top10Players();
     return guilds;
   }
