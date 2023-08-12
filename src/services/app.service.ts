@@ -5,7 +5,7 @@ import { Player } from 'src/entities/player.entity';
 import { hashPassword } from 'src/utils/sha1.utils';
 import { Like, Not, Repository } from 'typeorm';
 import * as md5 from 'md5';
-import generator from 'generate-password';
+import * as generator from 'generate-password';
 import { PlayerIndex } from 'src/entities/playerIndex.entity';
 import { ItemAttrRare } from 'src/entities/item_attr_rare.entity';
 import { ItemAttr } from 'src/entities/item_attr.entity';
@@ -128,6 +128,7 @@ export class AppService {
       where: { email, login },
     });
 
+    console.log(account);
     if (!account) return false;
 
     account.passlost_token = hash;
@@ -161,7 +162,7 @@ export class AppService {
     return newPassword;
   }
 
-  async debugCharacter(accountId: number, playerName: string, empire: string) {
+  async debugCharacter(accountId: number, playerName: string, empire: number) {
     // map 1 SHINSOO
     // map 2 CHUNJO
     // map 3 JINNO
@@ -170,15 +171,15 @@ export class AppService {
       x = '0',
       y = '0';
 
-    if (empire === '1') {
+    if (empire === 1) {
       mapIndex = '0';
       x = '459770';
       y = '953980';
-    } else if (empire === '2') {
+    } else if (empire === 2) {
       mapIndex = '21';
       x = '52043';
       y = '166304';
-    } else if (empire === '3') {
+    } else if (empire === 3) {
       mapIndex = '41';
       x = '957291';
       y = '255221';
@@ -287,6 +288,8 @@ export class AppService {
       .getRawMany();
 
     for (let i = 0; i < topGuilds.length; i++) {
+      topGuilds[i].index = i + 1;
+
       topGuilds[i].guild_ladder_point =
         topGuilds[i].guild_ladder_point.toLocaleString();
     }
@@ -343,6 +346,8 @@ export class AppService {
       .getRawMany();
 
     for (let i = 0; i < topPlayers.length; i++) {
+      topPlayers[i].index = i + 1;
+
       topPlayers[i].player_playtime =
         topPlayers[i].player_playtime.toLocaleString();
 
@@ -351,8 +356,10 @@ export class AppService {
     return topPlayers;
   }
 
-  async topPlayersRanklist(page: number) {
+  async topPlayersRanklist(page: any) {
     const ITEMS_PER_PAGE = 50;
+
+    page = parseInt(page);
 
     const totalPlayers = await this.playerRepository.count({
       where: [{ name: Not(Like('%[%')) }, { name: Not(Like('%]%')) }],
@@ -437,9 +444,10 @@ export class AppService {
     };
   }
 
-  async topGuildsRanklist(page: number) {
+  async topGuildsRanklist(page: any) {
     const ITEMS_PER_PAGE = 50;
 
+    page = parseInt(page);
     const totalGuilds = await this.guildRepository.count({
       where: [{ name: Not(Like('%[%')) }, { name: Not(Like('%]%')) }],
     });

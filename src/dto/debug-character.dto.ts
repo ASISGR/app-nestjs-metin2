@@ -7,7 +7,6 @@ import {
   IsNumber,
   Equals,
 } from 'class-validator';
-import { Equal } from 'typeorm';
 
 export class DebugCharacterDto {
   @Matches(/^[a-zA-Z0-9]+$/)
@@ -17,8 +16,7 @@ export class DebugCharacterDto {
   @IsNotEmpty()
   playerName: string;
 
-  @Equals('1' || '2' || '3')
-  @IsString()
+  @IsNumber()
   @IsNotEmpty()
-  empire: string;
+  empire: number;
 }

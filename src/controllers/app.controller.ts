@@ -8,6 +8,7 @@ import {
   Post,
   UseGuards,
   Request,
+  Param,
 } from '@nestjs/common';
 import { AppService } from '../services/app.service';
 import { StatisticService } from '../services/statistic.service';
@@ -23,6 +24,7 @@ import { accountActivationDto } from 'src/dto/account-activation.dto';
 import { AsyncValidationDTO } from 'src/dto/async-validation-data.dto';
 import { ApplyResetPasswordDto } from 'src/dto/apply-reset-password.dto';
 import { DebugCharacterDto } from 'src/dto/debug-character.dto';
+import { RankingIndex } from 'src/dto/ranking.request.dto';
 
 @Controller()
 export class AppController {
@@ -275,6 +277,7 @@ export class AppController {
   ) {
     const playerName = body.playerName;
     const empire = body.empire;
+    console.log(empire);
     const debugChar = await this.appService.debugCharacter(
       req.user.userId,
       playerName,
@@ -315,5 +318,33 @@ export class AppController {
       registerStatus: registerStatus,
       registerEmailActivationStatus: registerEmailActivationStatus,
     };
+  }
+
+  @HttpCode(200)
+  @Get('top10Ranks')
+  async top10Ranks() {
+    const top10Guilds = await this.appService.top10Guilds();
+    const top10Players = await this.appService.top10Players();
+
+    return {
+      top10Guilds: top10Guilds,
+      top10Players: top10Players,
+    };
+  }
+
+  @HttpCode(200)
+  @Get('topListPlayers/:index')
+  async topPlayersList(@Param() params: RankingIndex) {
+    const topPlayers = await this.appService.topPlayersRanklist(params.index);
+
+    return topPlayers;
+  }
+
+  @HttpCode(200)
+  @Get('topListGuilds/:index')
+  async topGuildsList(@Param() params: RankingIndex) {
+    const topGuilds = await this.appService.topGuildsRanklist(params.index);
+
+    return topGuilds;
   }
 }
