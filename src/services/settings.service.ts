@@ -21,27 +21,43 @@ export class SettingsService {
     private settingsRepository: Repository<Settings>,
   ) {}
 
-  public async registerActive(active: '1' | '0') {
-    const homepage = await this.settingsRepository.find();
+  public async changeRegisterStatus(active: 1 | 0) {
+    const registerStatus = await this.settingsRepository
+      .createQueryBuilder('settings')
+      .update()
+      .set({ register: active })
+      .execute();
 
-    homepage[0].register = Number(active);
-    return await this.settingsRepository.save(homepage);
+    return registerStatus;
   }
 
-  public async registerEmailVerification(active: '1' | '0') {
-    const homepage = await this.settingsRepository.find();
+  public async changeRegisterEmailVerificationStatus(active: 1 | 0) {
+    const registerEmailStatus = await this.settingsRepository
+      .createQueryBuilder('settings')
+      .update()
+      .set({ registerEmailVerification: active })
+      .execute();
 
-    homepage[0].registerEmailVerification = Number(active);
-    return await this.settingsRepository.save(homepage);
+    return registerEmailStatus;
   }
 
-  public async getRegisterEmailVerification() {
-    const registerEmailVerification = await this.settingsRepository.find();
-    return registerEmailVerification[0].registerEmailVerification;
+  public async isRegisterEmailVerification() {
+    const isEmailVerificationEnable = await this.settingsRepository
+      .createQueryBuilder('settings')
+      .select('settings.registerEmailVerification')
+      .getRawOne();
+
+    return isEmailVerificationEnable.settings_registerEmailVerification > 0;
   }
 
-  public async getRegisterEnableSetting() {
-    const registerEnable = await this.settingsRepository.find();
-    return registerEnable[0].register;
+  public async isRegisterEnableSetting() {
+    const isRegisterEnable = await this.settingsRepository
+      .createQueryBuilder('settings')
+      .select('settings.register')
+      .getRawOne();
+
+    console.log(isRegisterEnable);
+
+    return isRegisterEnable.settings_register > 0;
   }
 }

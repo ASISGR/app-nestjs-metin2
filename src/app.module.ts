@@ -16,9 +16,10 @@ import { AuthModule } from './modules/auth.modules';
 import { Safebox } from './entities/safebox.entity';
 import { ItemAttr } from './entities/item_attr.entity';
 import { ItemAttrRare } from './entities/item_attr_rare.entity';
-import { MailerModule } from './modules/mailer.module';
-import { MailerService } from './services/mailer.service';
+import { MailerModule } from './modules/mailer.modules';
 import { Quest } from './entities/quest.entity';
+import { GuildMember } from './entities/guild_member.entity';
+import { SettingsService } from './services/settings.service';
 
 @Module({
   imports: [
@@ -40,9 +41,10 @@ import { Quest } from './entities/quest.entity';
       ItemAttr,
       ItemAttrRare,
       Quest,
+      GuildMember,
     ]),
   ],
   controllers: [AppController],
-  providers: [AppService, StatisticService, AuthService, MailerService],
+  providers: [AppService, StatisticService, SettingsService, AuthService],
 })
 export class AppModule {}

@@ -6,7 +6,7 @@ export class Player {
   id: number;
 
   @Column()
-  account_id: string;
+  account_id: number;
 
   @Column()
   name: string;

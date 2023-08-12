@@ -1,13 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { MailerService as MailerServiceLib } from '@nestjs-modules/mailer';
-import path from 'path';
-import fs from 'fs';
+import * as path from 'path';
+import * as fs from 'fs';
 
 @Injectable()
 export class MailerService {
   constructor(private mailerService: MailerServiceLib) {}
 
-  async sendVerification(account: any, hash: string, locale: string) {
+  async sendVerification(account: any, hash: string, locale?: string) {
     //Default gr if not exists
     if (!locale) {
       locale = 'gr';
@@ -17,6 +17,8 @@ export class MailerService {
       __dirname,
       `../templates/verification-template-${locale}.html`,
     );
+
+    console.log(templatePath);
     const htmlTemplate = fs
       .readFileSync(templatePath, 'utf8')
       .replace('{real_name}', account.real_name)

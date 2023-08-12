@@ -13,6 +13,7 @@ import { Guild } from 'src/entities/guild.entity';
 import { Quest } from 'src/entities/quest.entity';
 import { Safebox } from 'src/entities/safebox.entity';
 import { GuildMember } from 'src/entities/guild_member.entity';
+import { UserJwtTokenDto } from 'src/dto/user-jwt-token.dto';
 
 @Injectable()
 export class AppService {
@@ -31,12 +32,13 @@ export class AppService {
     @InjectRepository(Quest) private questRepository: Repository<Quest>,
   ) {}
 
-  async usernameExists(username: string): Promise<Object | null> {
-    return await this.accountRepository.find({ where: { login: username } });
+  async usernameExists(username: string) {
+    console.log(username);
+    return await this.accountRepository.findOne({ where: { login: username } });
   }
 
   async emailExists(email: string): Promise<Object | null> {
-    return await this.accountRepository.find({ where: { email } });
+    return await this.accountRepository.findOne({ where: { email } });
   }
 
   async createAccount(account: any, isAccVerificationActive: boolean) {
@@ -88,7 +90,7 @@ export class AppService {
   }
 
   async updatePassword(
-    accountUser: any,
+    accountUser: UserJwtTokenDto,
     oldPassword: string,
     newPassword: string,
   ) {
@@ -96,8 +98,10 @@ export class AppService {
     newPassword = hashPassword(newPassword);
 
     const account = await this.accountRepository.findOne({
-      where: { id: accountUser.id, password: oldPassword },
+      where: { id: accountUser.userId, password: oldPassword },
     });
+
+    if (!account) return false;
 
     account.password = newPassword;
 
@@ -108,6 +112,8 @@ export class AppService {
     const account = await this.accountRepository.findOne({
       where: { status: 'BLOCK', web_aktiviert: hash },
     });
+
+    if (!account) return false;
 
     account.status = 'OK';
     account.web_aktiviert = '1';
@@ -122,9 +128,13 @@ export class AppService {
       where: { email, login },
     });
 
+    if (!account) return false;
+
     account.passlost_token = hash;
 
-    return await this.accountRepository.save(account);
+    await this.accountRepository.save(account);
+
+    return hash;
   }
 
   async resetPassword(hash: string) {
@@ -141,6 +151,8 @@ export class AppService {
       where: { passlost_token: hash },
     });
 
+    if (!account) return false;
+
     account.passlost_token = '';
     account.password = newHashPassword;
 
@@ -149,11 +161,7 @@ export class AppService {
     return newPassword;
   }
 
-  async debugCharacter(
-    accountId: string,
-    playerName: string,
-    empire: 'SHINSOO' | 'CHUNJO' | 'JINNO',
-  ) {
+  async debugCharacter(accountId: number, playerName: string, empire: string) {
     // map 1 SHINSOO
     // map 2 CHUNJO
     // map 3 JINNO
@@ -162,15 +170,15 @@ export class AppService {
       x = '0',
       y = '0';
 
-    if (empire === 'SHINSOO') {
+    if (empire === '1') {
       mapIndex = '0';
       x = '459770';
       y = '953980';
-    } else if (empire === 'CHUNJO') {
+    } else if (empire === '2') {
       mapIndex = '21';
       x = '52043';
       y = '166304';
-    } else if (empire === 'JINNO') {
+    } else if (empire === '3') {
       mapIndex = '41';
       x = '957291';
       y = '255221';
@@ -181,6 +189,8 @@ export class AppService {
     const player = await this.playerRepository.findOne({
       where: { account_id: accountId, name: playerName },
     });
+
+    if (!player) return false;
 
     player.map_index = mapIndex;
     player.x = x;
@@ -203,10 +213,7 @@ export class AppService {
         'player.account_id',
         'playerIndex.empire',
         'playerSafebox.password',
-        // 'player.playerIndex',
       ])
-      // .leftJoinAndSelect('player.playerIndex', 'playerIndex')
-      // .leftJoinAndSelect('player.safebox', 'safebox')
       .leftJoin(
         PlayerIndex,
         'playerIndex',
@@ -240,11 +247,18 @@ export class AppService {
   }
 
   async getItemAttr() {
-    return await this.itemAttrRepository.find();
+    return await this.itemAttrRepository
+      .createQueryBuilder('item_attr')
+      .select([])
+      .getRawMany();
   }
 
   async getItemAttrRare() {
-    return await this.itemAttrRareRepository.find();
+    return await this.itemAttrRareRepository
+      .createQueryBuilder('item_attr_rare')
+      .select([])
+
+      .getRawMany();
   }
 
   async top10Guilds() {
@@ -254,14 +268,18 @@ export class AppService {
         'guild.name',
         'guild.level',
         'guild.ladder_point',
-        'player_index.empire AS empire',
-        'player.name AS guild_leader',
+        'playerLeader.name',
+        'playerIndex.empire',
       ])
-      .leftJoin('guild.player', 'player')
-      .leftJoin('player.playerIndex', 'player_index')
+      .leftJoin(Player, 'playerLeader', 'playerLeader.id = guild.master')
+      .leftJoin(
+        PlayerIndex,
+        'playerIndex',
+        'playerIndex.id = playerLeader.account_id',
+      )
       .where("guild.name NOT LIKE '%[%' AND guild.name NOT LIKE '%]%'")
       .groupBy(
-        'guild.name, guild.level, guild.ladder_point, player_index.empire, player.name',
+        'guild.name, guild.level, guild.ladder_point, playerIndex_empire, playerLeader_name',
       )
       .orderBy('guild.level', 'DESC')
       .addOrderBy('guild.ladder_point', 'DESC')
@@ -346,44 +364,135 @@ export class AppService {
       page = 1;
     }
 
+    const offset = (page - 1) * ITEMS_PER_PAGE;
+
     const topPlayers = await this.playerRepository
       .createQueryBuilder('player')
       .select([
-        'player.name as player_name',
-        'player.level as player_level',
-        'player.playtime as player_playtime',
-        'player_index.empire AS empire',
-        'guild.name AS guild_name',
-        '(SELECT CONCAT("Βιολόγος ", COALESCE(MAX(CAST(SUBSTRING_INDEX(q.szName, "collect_quest_lv", -1) AS UNSIGNED)), -1)) FROM quest q WHERE q.dwPID = player.id AND q.szName LIKE "collect_quest_lv%") AS highest_collect_quest_lv',
+        'player.name',
+        'player.level',
+        'player.playtime',
+        'player.exp',
+        'player.horse_level',
+        'playerIndex.empire',
+        'playerGuild.name',
+        `CONCAT('Βιολόγος ', MAX(collect_quest_lv)) AS highest_collect_quest_lv`,
       ])
-      .leftJoin('player.guild', 'guild')
-      .leftJoin('player.playerIndex', 'player_index')
+      .leftJoin(
+        PlayerIndex,
+        'playerIndex',
+        'player.account_id = playerIndex.id',
+      )
+      .leftJoin(
+        GuildMember,
+        'playerGuildMember',
+        'player.id = playerGuildMember.pid',
+      )
+      .leftJoin(
+        Guild,
+        'playerGuild',
+        'playerGuildMember.guild_id = playerGuild.id ',
+      )
+      .leftJoin(
+        (subQuery) =>
+          subQuery
+            .select([
+              'dwPID',
+              "REPLACE(SUBSTRING_INDEX(szName, '_', -1), 'lv', '') + 0 AS collect_quest_lv",
+            ])
+            .from(Quest, 'quest')
+            .where("quest.szName LIKE 'collect_quest_lv%'"),
+        'collect_quest_lv',
+        'collect_quest_lv.dwPID = player.id',
+      )
       .where("player.name NOT LIKE '%[%' AND player.name NOT LIKE '%]%'")
-      .groupBy(
-        'player.name, player.level, player.playtime, player_index.empire, guild.name',
-      )
+      .groupBy('player.name, player.level, player.playtime, playerIndex.empire')
       .orderBy('player.level', 'DESC')
-      .addOrderBy(
-        '(SELECT COALESCE(MAX(CAST(SUBSTRING_INDEX(quest.szName, "collect_quest_lv", -1) AS UNSIGNED)), -1) FROM quest WHERE quest.dwPID = player.id AND quest.szName LIKE "collect_quest_lv%")',
-        'DESC',
-      )
+      .addOrderBy('MAX(collect_quest_lv)', 'DESC')
       .addOrderBy('player.playtime', 'DESC')
-      .limit(10)
+      .limit(ITEMS_PER_PAGE)
+      .offset(offset)
+      .take(ITEMS_PER_PAGE)
       .getRawMany();
 
-    const formattedPlayers = topPlayers.map((player) => {
-      return {
-        ...player,
-        exp: Number(player.exp).toLocaleString(),
-        playtime: Number(player.playtime).toLocaleString(),
-      };
-    });
+    for (let i = 0; i < topPlayers.length; i++) {
+      topPlayers[i].index = i + 1;
+      topPlayers[i].player_exp = topPlayers[i].player_exp.toLocaleString();
+
+      topPlayers[i].player_playtime =
+        topPlayers[i].player_playtime.toLocaleString();
+    }
 
     const totalCount = totalPlayers;
 
     return {
-      players: formattedPlayers,
+      players: topPlayers,
       totalPlayers: totalCount,
+      hasNextPage: ITEMS_PER_PAGE * page < totalCount,
+      currentPage: page,
+      hasPreviousPage: page > 1,
+      nextPage: page + 1,
+      previousPage: page - 1,
+      lastPage: Math.ceil(totalCount / ITEMS_PER_PAGE),
+    };
+  }
+
+  async topGuildsRanklist(page: number) {
+    const ITEMS_PER_PAGE = 50;
+
+    const totalGuilds = await this.guildRepository.count({
+      where: [{ name: Not(Like('%[%')) }, { name: Not(Like('%]%')) }],
+    });
+
+    if (page && page > 0 && page <= Math.ceil(totalGuilds / ITEMS_PER_PAGE)) {
+      page = page;
+    } else {
+      page = 1;
+    }
+
+    const offset = (page - 1) * ITEMS_PER_PAGE;
+
+    const topGuilds = await this.guildRepository
+      .createQueryBuilder('guild')
+      .select([
+        'guild.name',
+        'guild.level',
+        'guild.win',
+        'guild.draw',
+        'guild.loss',
+        'guild.ladder_point',
+        'playerLeader.name',
+        'playerIndex.empire',
+      ])
+      .leftJoin(Player, 'playerLeader', 'guild.master = playerLeader.id')
+      .leftJoin(
+        PlayerIndex,
+        'playerIndex',
+        'playerLeader.account_id = playerIndex.id',
+      )
+      .where("guild.name NOT LIKE '%[%' AND guild.name NOT LIKE '%]%'")
+      .groupBy(
+        'guild.name, guild.level, guild.ladder_point, playerLeader_name, playerIndex_empire',
+      )
+      .orderBy('guild.level', 'DESC')
+      .orderBy('guild.ladder_point', 'DESC')
+      .limit(ITEMS_PER_PAGE)
+      .offset(offset)
+      .take(ITEMS_PER_PAGE)
+      .getRawMany();
+
+    for (let i = 0; i < topGuilds.length; i++) {
+      topGuilds[i].index = i + 1;
+      console.log(topGuilds[i]);
+      topGuilds[i].guild_ladder_point =
+        topGuilds[i].guild_ladder_point.toLocaleString();
+    }
+
+    const totalCount = totalGuilds;
+
+    return {
+      guilds: topGuilds,
+      totalGuilds: totalCount,
       hasNextPage: ITEMS_PER_PAGE * page < totalCount,
       currentPage: page,
       hasPreviousPage: page > 1,
