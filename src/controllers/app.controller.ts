@@ -136,6 +136,12 @@ export class AppController {
     }
     const accountInfo = await this.appService.userInformation(token.user_id);
 
+    if (!accountInfo) {
+      return {
+        access_token: token.access_token,
+        accountInfo: null,
+      };
+    }
     Object.assign(accountInfo, {
       userId: accountFound.userId,
       login: accountFound.login,
@@ -277,7 +283,6 @@ export class AppController {
   ) {
     const playerName = body.playerName;
     const empire = body.empire;
-    console.log(empire);
     const debugChar = await this.appService.debugCharacter(
       req.user.userId,
       playerName,

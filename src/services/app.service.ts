@@ -241,9 +241,10 @@ export class AppService {
 
     return {
       players: players,
-      empire: player[0].playerIndex_empire,
+      empire: player.length > 0 ? player[0].playerIndex_empire : null,
       playtime: playtime,
-      safebox_password: player[0].playerSafebox_password,
+      safebox_password:
+        player.length > 0 ? player[0].playerSafebox_password : null,
     };
   }
 
