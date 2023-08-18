@@ -13,14 +13,14 @@ export class AuthService {
     }
 
     const payload = {
-      user_id: user.userId,
+      userId: user.userId,
       username: user.login,
       email: user.email,
       web_admin: user.isAdmin,
     };
     return {
       access_token: await this.jwtService.signAsync(payload),
-      user_id: user.userId,
+      userId: user.userId,
     };
   }
 }

@@ -25,7 +25,14 @@ import { AsyncValidationDTO } from 'src/dto/async-validation-data.dto';
 import { ApplyResetPasswordDto } from 'src/dto/apply-reset-password.dto';
 import { DebugCharacterDto } from 'src/dto/debug-character.dto';
 import { RankingIndex } from 'src/dto/ranking.request.dto';
-
+import { RecaptchaDTO } from 'src/dto/recaptcha-verification.dto';
+import { SkipThrottle, Throttle } from '@nestjs/throttler';
+import { ThrottlerBehindProxyGuard } from 'src/middlewares/throttler-behind-proxy.guard';
+import { AdministratorService } from 'src/services/administrator.service';
+import { CreateNewsDto } from 'src/dto/create-news.dto';
+// TODO: Να περάσω στα end google recaptha
+@SkipThrottle()
+@UseGuards(ThrottlerBehindProxyGuard)
 @Controller()
 export class AppController {
   constructor(
@@ -34,6 +41,7 @@ export class AppController {
     private authService: AuthService,
     private settingsService: SettingsService,
     private mailerService: MailerService,
+    private administratorService: AdministratorService,
   ) {}
 
   @HttpCode(200)
@@ -114,6 +122,8 @@ export class AppController {
     };
   }
 
+  @SkipThrottle(false)
+  @Throttle(5, 10)
   @HttpCode(200)
   @Post('login')
   async login(@Body() body: LoginUserDto) {
@@ -134,7 +144,7 @@ export class AppController {
         HttpStatus.UNAUTHORIZED,
       );
     }
-    const accountInfo = await this.appService.userInformation(token.user_id);
+    const accountInfo = await this.appService.userInformation(token.userId);
 
     if (!accountInfo) {
       return {
@@ -159,7 +169,8 @@ export class AppController {
       accountInfo: accountInfo,
     };
   }
-
+  @SkipThrottle(false)
+  @Throttle(5, 10)
   @UseGuards(AuthGuard)
   @HttpCode(200)
   @Post('change-user-password')
@@ -232,7 +243,8 @@ export class AppController {
       status: true,
     };
   }
-
+  @SkipThrottle(false)
+  @Throttle(5, 10)
   @HttpCode(200)
   @Post('apply-reset-password')
   async applyRequestResetPassword(@Body() body: ApplyResetPasswordDto) {
@@ -274,6 +286,8 @@ export class AppController {
     };
   }
 
+  @SkipThrottle(false)
+  @Throttle(5, 10)
   @UseGuards(AuthGuard)
   @HttpCode(200)
   @Post('debug-character')
@@ -351,5 +365,56 @@ export class AppController {
     const topGuilds = await this.appService.topGuildsRanklist(params.index);
 
     return topGuilds;
+  }
+
+  @HttpCode(200)
+  @Post('verifyRecaptcha')
+  async recaptchaVerification(@Body() body: RecaptchaDTO) {
+    const verify: any = await this.appService.recaptcha(
+      body.secret,
+      body.response,
+    );
+
+    if (!verify.data.success) {
+      console.log(verify);
+      throw new HttpException(
+        `Oops! It seems our reCAPTCHA V3 verification was unsuccessful. Please ensure you're not a robot by trying again, and double-check your internet connection. If the issue persists, please contact our support team for assistance.`,
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    return verify.data;
+  }
+
+  @SkipThrottle(false)
+  @Throttle(5, 10)
+  @UseGuards(AuthGuard)
+  @HttpCode(200)
+  @Post('post')
+  async createPost(
+    @Body() body: CreateNewsDto,
+    @Request() req: Request & { user: UserJwtTokenDto },
+  ) {
+    console.log(body);
+
+    const createPost = await this.administratorService.createPost(body);
+
+    if (!createPost) {
+      throw new HttpException(
+        `Σφάλμα. Η δημιουργία δημοσίευσης απέτυχε. Παρακαλώ δοκιμάστε ξανά`,
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    return {
+      message: `Επιτυχία! Η δημοσίευση δημιουργήθηκε.`,
+    };
+  }
+
+  @HttpCode(200)
+  @Get('posts')
+  async findPosts() {
+    const posts = await this.administratorService.findPosts();
+    return posts;
   }
 }

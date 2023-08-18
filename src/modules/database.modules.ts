@@ -6,6 +6,7 @@ import { GuildMember } from 'src/entities/guild_member.entity';
 import { Item } from 'src/entities/item.entity';
 import { ItemAttr } from 'src/entities/item_attr.entity';
 import { ItemAttrRare } from 'src/entities/item_attr_rare.entity';
+import { News } from 'src/entities/news.entity';
 import { Player } from 'src/entities/player.entity';
 import { PlayerIndex } from 'src/entities/playerIndex.entity';
 import { Quest } from 'src/entities/quest.entity';
@@ -35,6 +36,7 @@ require('dotenv').config();
         ItemAttrRare,
         Quest,
         GuildMember,
+        News,
       ],
       synchronize: false,
     }),

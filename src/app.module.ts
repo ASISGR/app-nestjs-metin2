@@ -20,6 +20,9 @@ import { MailerModule } from './modules/mailer.modules';
 import { Quest } from './entities/quest.entity';
 import { GuildMember } from './entities/guild_member.entity';
 import { SettingsService } from './services/settings.service';
+import { ThrottlerModule } from '@nestjs/throttler';
+import { News } from './entities/news.entity';
+import { AdministratorService } from './services/administrator.service';
 
 @Module({
   imports: [
@@ -42,9 +45,20 @@ import { SettingsService } from './services/settings.service';
       ItemAttrRare,
       Quest,
       GuildMember,
+      News,
     ]),
+    ThrottlerModule.forRoot({
+      ttl: 60,
+      limit: 10,
+    }),
   ],
   controllers: [AppController],
-  providers: [AppService, StatisticService, SettingsService, AuthService],
+  providers: [
+    AppService,
+    StatisticService,
+    SettingsService,
+    AuthService,
+    AdministratorService,
+  ],
 })
 export class AppModule {}

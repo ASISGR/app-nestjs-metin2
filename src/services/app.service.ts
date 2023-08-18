@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Account } from 'src/entities/account.entity';
 import { Player } from 'src/entities/player.entity';
 import { hashPassword } from 'src/utils/sha1.utils';
-import { Like, Not, Repository } from 'typeorm';
+import { And, Like, Not, Repository } from 'typeorm';
 import * as md5 from 'md5';
 import * as generator from 'generate-password';
 import { PlayerIndex } from 'src/entities/playerIndex.entity';
@@ -14,6 +14,7 @@ import { Quest } from 'src/entities/quest.entity';
 import { Safebox } from 'src/entities/safebox.entity';
 import { GuildMember } from 'src/entities/guild_member.entity';
 import { UserJwtTokenDto } from 'src/dto/user-jwt-token.dto';
+import axios from 'axios';
 
 @Injectable()
 export class AppService {
@@ -58,11 +59,11 @@ export class AppService {
 
     const isCreated = await this.accountRepository.save(account);
 
-    if (isCreated) {
-      return hash;
+    if (!isCreated) {
+      return false;
     }
 
-    return false;
+    return hash;
   }
 
   async singIn(username: string, password: string) {
@@ -97,10 +98,12 @@ export class AppService {
     oldPassword = hashPassword(oldPassword);
     newPassword = hashPassword(newPassword);
 
+    console.log(accountUser.userId, oldPassword);
     const account = await this.accountRepository.findOne({
       where: { id: accountUser.userId, password: oldPassword },
     });
 
+    console.log(account);
     if (!account) return false;
 
     account.password = newPassword;
@@ -509,5 +512,11 @@ export class AppService {
       previousPage: page - 1,
       lastPage: Math.ceil(totalCount / ITEMS_PER_PAGE),
     };
+  }
+
+  async recaptcha(secret: string, response: string) {
+    return axios(
+      `https://www.google.com/recaptcha/api/siteverify?secret=${secret}&response=${response}`,
+    );
   }
 }
