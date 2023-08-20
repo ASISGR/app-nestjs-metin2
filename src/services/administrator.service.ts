@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { CreateNewsDto } from 'src/dto/create-news.dto';
+import { CreateNewsDto, DeleteNewsDto, updateNewsDto } from 'src/dto/news.dto';
 import { Account } from 'src/entities/account.entity';
 import { Guild } from 'src/entities/guild.entity';
 import { Item } from 'src/entities/item.entity';
@@ -22,7 +22,6 @@ export class AdministratorService {
   ) {}
 
   async createPost(Post: CreateNewsDto): Promise<any> {
-    console.log('service:', Post);
     const post = await this.newsRepository
       .createQueryBuilder('news')
       .insert()
@@ -30,7 +29,6 @@ export class AdministratorService {
         title: Post.title,
         postContent: Post.postContent,
         author: Post.author,
-        created_at: Post.created_at,
       })
       .execute();
 
@@ -44,5 +42,30 @@ export class AdministratorService {
       .createQueryBuilder('news')
       .select([])
       .execute();
+  }
+
+  async editPost(post: updateNewsDto): Promise<any> {
+    const updatePost = await this.newsRepository
+      .createQueryBuilder('news')
+      .update()
+      .set({
+        author: post.author,
+        postContent: post.postContent,
+        updated_at: post.updated_at,
+      })
+      .where({ id: post.id })
+      .execute();
+
+    return updatePost;
+  }
+
+  async deletePost(post: DeleteNewsDto): Promise<any> {
+    console.log(post.id);
+    const deletePost = await this.newsRepository
+      .createQueryBuilder('news')
+      .delete()
+      .where({ id: post.id })
+      .execute();
+    return deletePost;
   }
 }

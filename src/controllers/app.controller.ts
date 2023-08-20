@@ -9,6 +9,8 @@ import {
   UseGuards,
   Request,
   Param,
+  Patch,
+  Delete,
 } from '@nestjs/common';
 import { AppService } from '../services/app.service';
 import { StatisticService } from '../services/statistic.service';
@@ -29,7 +31,12 @@ import { RecaptchaDTO } from 'src/dto/recaptcha-verification.dto';
 import { SkipThrottle, Throttle } from '@nestjs/throttler';
 import { ThrottlerBehindProxyGuard } from 'src/middlewares/throttler-behind-proxy.guard';
 import { AdministratorService } from 'src/services/administrator.service';
-import { CreateNewsDto } from 'src/dto/create-news.dto';
+import { CreateNewsDto, DeleteNewsDto } from 'src/dto/news.dto';
+import { RolesGuard } from 'src/middlewares/roles.guards';
+import {
+  registerSwitchDto,
+  registerSwitchVerificationDto,
+} from 'src/dto/settings.dto';
 // TODO: Να περάσω στα end google recaptha
 @SkipThrottle()
 @UseGuards(ThrottlerBehindProxyGuard)
@@ -388,7 +395,7 @@ export class AppController {
 
   @SkipThrottle(false)
   @Throttle(5, 10)
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuard, RolesGuard)
   @HttpCode(200)
   @Post('post')
   async createPost(
@@ -416,5 +423,91 @@ export class AppController {
   async findPosts() {
     const posts = await this.administratorService.findPosts();
     return posts;
+  }
+
+  @HttpCode(200)
+  @UseGuards(AuthGuard, RolesGuard)
+  @Patch('posts')
+  async editPost(
+    @Body() body: CreateNewsDto,
+    @Request() req: Request & { user: UserJwtTokenDto },
+  ) {
+    const post = await this.administratorService.editPost(body);
+    if (post.affected == 0) {
+      return {
+        message: 'Post could not be updated.',
+        success: false,
+      };
+    }
+    return { message: 'Post updated successfully', success: true };
+  }
+
+  @HttpCode(200)
+  @UseGuards(AuthGuard, RolesGuard)
+  @Delete('posts')
+  async deletePost(
+    @Body() body: DeleteNewsDto,
+    @Request() req: Request & { user: UserJwtTokenDto },
+  ) {
+    console.log(body);
+    const post = await this.administratorService.deletePost(body);
+    if (post.affected == 0) {
+      return {
+        message: 'Post could not be deleted.',
+        success: false,
+      };
+    }
+    return { message: 'Post deleted successfully', success: true };
+  }
+
+  @HttpCode(200)
+  @UseGuards(AuthGuard, RolesGuard)
+  @Post('register-switch')
+  async registerSwitch(@Body() body: registerSwitchDto) {
+    const register = await this.settingsService.changeRegisterStatus(
+      body.register,
+    );
+
+    if (register.affected == 0) {
+      throw new HttpException(
+        `Register could not be activated.`,
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    const message = body.register
+      ? `Register activated.`
+      : `Register deactivated.`;
+
+    return {
+      message: message,
+    };
+  }
+
+  @HttpCode(200)
+  @UseGuards(AuthGuard, RolesGuard)
+  @Post('register-verification')
+  async registerRequiredEmailVerification(
+    @Body() body: registerSwitchVerificationDto,
+  ) {
+    const register =
+      await this.settingsService.changeRegisterEmailVerificationStatus(
+        body.registerEmailVerification,
+      );
+
+    if (register.affected == 0) {
+      throw new HttpException(
+        `Register email verification could not be activated.`,
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    const message = body.registerEmailVerification
+      ? `Register email verification activated.`
+      : `Register email verification deactivated.`;
+
+    return {
+      message: message,
+    };
   }
 }

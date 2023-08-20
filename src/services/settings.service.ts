@@ -21,21 +21,21 @@ export class SettingsService {
     private settingsRepository: Repository<Settings>,
   ) {}
 
-  public async changeRegisterStatus(active: 1 | 0) {
+  public async changeRegisterStatus(active: boolean) {
     const registerStatus = await this.settingsRepository
       .createQueryBuilder('settings')
       .update()
-      .set({ register: active })
+      .set({ register: active ? 1 : 0 })
       .execute();
 
     return registerStatus;
   }
 
-  public async changeRegisterEmailVerificationStatus(active: 1 | 0) {
+  public async changeRegisterEmailVerificationStatus(active: boolean) {
     const registerEmailStatus = await this.settingsRepository
       .createQueryBuilder('settings')
       .update()
-      .set({ registerEmailVerification: active })
+      .set({ registerEmailVerification: active ? 1 : 0 })
       .execute();
 
     return registerEmailStatus;
