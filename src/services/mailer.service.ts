@@ -84,7 +84,7 @@ export class MailerService {
 
     return this.mailerService.sendMail({
       from: `"Reventon - GR👻" <${process.env.MAILER_USER}>`, // sender address
-      to: emails, // list of receivers
+      bcc: emails, // list of receivers
       subject: subject, // Subject line
       html: htmlTemplate, // html body
     });
