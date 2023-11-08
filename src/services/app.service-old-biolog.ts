@@ -312,7 +312,7 @@ export class AppService {
         'player.horse_level',
         'playerIndex.empire',
         'playerGuild.name',
-        `CONCAT('Αποστολή ', MAX(collect_quest_lv)) AS highest_collect_quest_lv`,
+        `CONCAT('Βιολόγος ', MAX(collect_quest_lv)) AS highest_collect_quest_lv`,
       ])
       .leftJoin(
         PlayerIndex,
@@ -332,9 +332,12 @@ export class AppService {
       .leftJoin(
         (subQuery) =>
           subQuery
-            .select(['dwPID', 'lValue AS collect_quest_lv'])
+            .select([
+              'dwPID',
+              "REPLACE(SUBSTRING_INDEX(szName, '_', -1), 'lv', '') + 0 AS collect_quest_lv",
+            ])
             .from(Quest, 'quest')
-            .where("quest.szName LIKE 'biologist'"),
+            .where("quest.szName LIKE 'collect_quest_lv%'"),
         'collect_quest_lv',
         'collect_quest_lv.dwPID = player.id',
       )
@@ -353,10 +356,6 @@ export class AppService {
         topPlayers[i].player_playtime.toLocaleString();
 
       topPlayers[i].player_exp = topPlayers[i].player_exp.toLocaleString();
-
-      if (topPlayers[i].highest_collect_quest_lv === 'Αποστολή 15') {
-        topPlayers[i].highest_collect_quest_lv = 'Ολοκληρωμένος';
-      }
     }
     return topPlayers;
   }
@@ -388,7 +387,7 @@ export class AppService {
         'player.horse_level',
         'playerIndex.empire',
         'playerGuild.name',
-        `CONCAT('Αποστολή ', MAX(collect_quest_lv)) AS highest_collect_quest_lv`,
+        `CONCAT('Βιολόγος ', MAX(collect_quest_lv)) AS highest_collect_quest_lv`,
       ])
       .leftJoin(
         PlayerIndex,
@@ -408,9 +407,12 @@ export class AppService {
       .leftJoin(
         (subQuery) =>
           subQuery
-            .select(['dwPID', 'lValue AS collect_quest_lv'])
+            .select([
+              'dwPID',
+              "REPLACE(SUBSTRING_INDEX(szName, '_', -1), 'lv', '') + 0 AS collect_quest_lv",
+            ])
             .from(Quest, 'quest')
-            .where("quest.szName LIKE 'biologist'"),
+            .where("quest.szName LIKE 'collect_quest_lv%'"),
         'collect_quest_lv',
         'collect_quest_lv.dwPID = player.id',
       )
@@ -430,10 +432,6 @@ export class AppService {
 
       topPlayers[i].player_playtime =
         topPlayers[i].player_playtime.toLocaleString();
-
-      if (topPlayers[i].highest_collect_quest_lv === 'Αποστολή 15') {
-        topPlayers[i].highest_collect_quest_lv = 'Ολοκληρωμένος';
-      }
     }
 
     const totalCount = totalPlayers;

@@ -1,116 +1,95 @@
 <!DOCTYPE html>
 <html lang="el">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title></title>
+    <style>
+      body {
+        font-family: 'Arial', sans-serif;
+        background-color: #0f3242;
+        color: #333;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+      }
 
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title></title>
-  <style>
-    body {
-      font-family: 'Arial', sans-serif;
-      background-color: #0f3242;
-      color: #333;
-      margin: 0;
-      padding: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-    }
-
-    .container {
-      max-width: 600px;
-      margin: 20px auto;
-      padding: 20px;
-      background-color: #113c55;
-      border-radius: 5px;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-      text-align: center;
-    }
-
-    h1 {
-      color: #fff;
-    }
-
-    p {
-      margin-bottom: 20px;
-      color: #fff;
-    }
-
-    .button {
-      display: inline-block;
-      padding: 10px 20px;
-      text-decoration: none;
-      background-color: #0f3242;
-      color: #fff;
-      border-radius: 5px;
-    }
-  </style>
-</head>
-
-<body>
-  <div class="container">
-    <h1> ΕΓΓΡΑΦΉ ΣΟΥ ΕΊΝΑΙ ΣΧΈΔΟΝ ΟΛΟΚΛΗΡΩΜΈΝΗ</h1>
-    <br>
-    <p>
-      Χαίρετε {real_name}, καλωσορίσατε στον
-      Reventon! 
-    </p>
-    <p style="
-            line-height: 150%;
-            text-align: center;
-          ">
-      Τα στοιχεία του λογαριασμού σας είναι τα
-      πακάτω:
-    </p>
-        <ul style="
-        line-height: 150%;
+      .container {
+        max-width: 600px;
+        margin: 20px auto;
+        padding: 20px;
+        background-color: #113c55;
+        border-radius: 5px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
         text-align: center;
-        color: white;
-      ">
-          <li style="
-                      line-height: 21px;
-                      text-align: center;
-                    ">
-            Όνομα Χρήστη: {login}
-          </li>
-          <li style="
-                      line-height: 21px;
-                      text-align: center;
-                    ">
-            Κωδικός σύνδεσης: {password}
-          </li>
-          <li style="
-                      line-height: 21px;
-                      text-align: center;
-                    ">
-            Μυστική ερώτηση: {question1}
-          </li>
-          <li style="
-                      line-height: 21px;
-                      text-align: center;
-                    ">
-            Μυστική απάντηση: {answer1}
-          </li>
-          <li style="
-                      line-height: 21px;
-                      text-align: center;
-                    ">
-            Κωδικός διαγραφής χαρακτήρα:
-            {social_id}
-          </li>
-        </ul>
-        <p style="font-size: 14px; line-height: 150%">
-          Για να ολοκληρωθεί η εγγραφή σου και να
-          είσαι έτοιμος να μπεις στην μάχη επιβεβαίωσε
-          την διεύθυνση σου πατώντας κλικ στον
-          παρακάτω σύνδεσμο.
-        </p>
+      }
 
-        <a class="button" href="{BASE_FRONT_URL}?hash={hash}" target="_blank">ΕΝΕΡΓΟΠΟΙΗΣΗ ΛΟΓΑΡΙΑΣΜΟΥ</a>
-        <a class="button" href="https://facebook.com/ReventonGlobal" title="Facebook-Reventon-Page"
-          target="_blank">Facebook</a>
-        <a class="button" href="{BASE_FRONT_URL}">Ιστοσελίδα</a>
-  </div>
-</body>
+      h1 {
+        color: #fff;
+      }
+
+      p {
+        margin-bottom: 20px;
+        color: #fff;
+      }
+
+      .button {
+        display: inline-block;
+        padding: 10px 20px;
+        text-decoration: none;
+        background-color: #0f3242;
+        color: #fff;
+        border-radius: 5px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="container">
+      <h1>ΕΓΓΡΑΦΉ ΣΟΥ ΕΊΝΑΙ ΣΧΈΔΟΝ ΟΛΟΚΛΗΡΩΜΈΝΗ</h1>
+      <br />
+      <p font-size: 16px; line-height: 150%;>
+        Χαίρετε {real_name}, καλωσορίσατε στον Reventon! 
+      </p>
+      <p style="font-size: 16px; line-height: 150%; text-align: center">
+        Τα στοιχεία του λογαριασμού σας είναι τα πακάτω:
+      </p>
+      <ul style="line-height: 150%; text-align: center; color: white">
+        <li style="font-size: 16px; line-height: 150%; text-align: center">
+          Όνομα Χρήστη: {login}
+        </li>
+        <li style="font-size: 16px; line-height: 150%; text-align: center">
+          Κωδικός σύνδεσης: {password}
+        </li>
+        <li style="font-size: 16px; line-height: 150%; text-align: center">
+          Μυστική ερώτηση: {question1}
+        </li>
+        <li style="font-size: 16px; line-height: 150%; text-align: center">
+          Μυστική απάντηση: {answer1}
+        </li>
+        <li style="font-size: 16px; line-height: 150%; text-align: center">
+          Κωδικός διαγραφής χαρακτήρα: {social_id}
+        </li>
+      </ul>
+      <p style="font-size: 16px; line-height: 150%">
+        Για να ολοκληρωθεί η εγγραφή σου και να είσαι έτοιμος να μπεις στην μάχη
+        επιβεβαίωσε την διεύθυνση σου πατώντας κλικ στον παρακάτω σύνδεσμο.
+      </p>
+
+      <a class="button" href="{BASE_FRONT_URL}?hash={hash}" target="_blank"
+        >ΕΝΕΡΓΟΠΟΙΗΣΗ ΛΟΓΑΡΙΑΣΜΟΥ</a
+      >
+      <a
+        class="button"
+        href="https://facebook.com/ReventonGlobal"
+        title="Facebook-Reventon-Page"
+        target="_blank"
+        >Facebook</a
+      >
+      <a class="button" href="{BASE_FRONT_URL}">Ιστοσελίδα</a>
+    </div>
+  </body>
 </html>
