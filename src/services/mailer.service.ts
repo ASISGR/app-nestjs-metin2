@@ -59,4 +59,34 @@ export class MailerService {
       html: htmlTemplate, // html body
     });
   }
+
+  sendServerAnnouncement(
+    emails: string[],
+    subject: string,
+    title: string,
+    content: string,
+    locale?: string,
+  ) {
+    //Default gr if not exists
+    if (!locale) {
+      locale = 'gr';
+    }
+
+    const templatePath = path.join(
+      __dirname,
+      `../templates/server-announcement-template-${locale}.html`,
+    );
+    const htmlTemplate = fs
+      .readFileSync(templatePath, 'utf8')
+      .replace('{title}', title)
+      .replace('{content}', content)
+      .replace(/{BASE_FRONT_URL}/g, process.env.BASE_FRONT_URL);
+
+    return this.mailerService.sendMail({
+      from: `"Reventon - GR👻" <${process.env.MAILER_USER}>`, // sender address
+      to: emails, // list of receivers
+      subject: subject, // Subject line
+      html: htmlTemplate, // html body
+    });
+  }
 }

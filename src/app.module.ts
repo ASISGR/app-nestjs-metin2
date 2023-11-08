@@ -23,6 +23,7 @@ import { SettingsService } from './services/settings.service';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { News } from './entities/news.entity';
 import { AdministratorService } from './services/administrator.service';
+import { Email } from './entities/serverAnnouncementMails.entity';
 
 @Module({
   imports: [
@@ -46,6 +47,7 @@ import { AdministratorService } from './services/administrator.service';
       Quest,
       GuildMember,
       News,
+      Email,
     ]),
     ThrottlerModule.forRoot({
       ttl: 60,

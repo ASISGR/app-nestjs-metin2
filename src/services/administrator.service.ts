@@ -7,6 +7,7 @@ import { Item } from 'src/entities/item.entity';
 import { News } from 'src/entities/news.entity';
 import { Player } from 'src/entities/player.entity';
 import { PlayerIndex } from 'src/entities/playerIndex.entity';
+import { Email } from 'src/entities/serverAnnouncementMails.entity';
 import { Repository } from 'typeorm';
 
 @Injectable()
@@ -19,6 +20,7 @@ export class AdministratorService {
     @InjectRepository(Item) private itemRepository: Repository<Item>,
     @InjectRepository(Guild) private guildRepository: Repository<Guild>,
     @InjectRepository(News) private newsRepository: Repository<News>,
+    @InjectRepository(Email) private emailAnnouncement: Repository<Email>,
   ) {}
 
   async createPost(Post: CreateNewsDto): Promise<any> {
@@ -67,5 +69,18 @@ export class AdministratorService {
       .where({ id: post.id })
       .execute();
     return deletePost;
+  }
+
+  async findAnnouncementEmails() {
+    let emails = await this.emailAnnouncement
+      .createQueryBuilder()
+      .select(['email'])
+      .execute();
+
+    emails = emails.map((obj) => {
+      return obj.email;
+    });
+
+    return emails;
   }
 }

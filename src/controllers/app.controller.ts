@@ -37,6 +37,7 @@ import {
   registerSwitchDto,
   registerSwitchVerificationDto,
 } from 'src/dto/settings.dto';
+import { ServerAnnouncementDto } from 'src/dto/server-announcement.dto';
 // TODO: Να περάσω στα end google recaptha
 @SkipThrottle()
 @UseGuards(ThrottlerBehindProxyGuard)
@@ -508,6 +509,27 @@ export class AppController {
 
     return {
       message: message,
+    };
+  }
+
+  @HttpCode(200)
+  @UseGuards(AuthGuard, RolesGuard)
+  @Post('server-announcement')
+  async sendServerAnnouncement(@Body() body: ServerAnnouncementDto) {
+    const emails: string[] =
+      await this.administratorService.findAnnouncementEmails();
+
+    this.mailerService.sendServerAnnouncement(
+      emails,
+      body.subject,
+      body.title,
+      body.content,
+      'gr',
+    );
+
+    return {
+      message: 'Τα mails στάλθηκαν επιτυχώς',
+      emails: emails,
     };
   }
 }

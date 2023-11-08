@@ -11,6 +11,7 @@ import { Player } from 'src/entities/player.entity';
 import { PlayerIndex } from 'src/entities/playerIndex.entity';
 import { Quest } from 'src/entities/quest.entity';
 import { Safebox } from 'src/entities/safebox.entity';
+import { Email } from 'src/entities/serverAnnouncementMails.entity';
 import { Settings } from 'src/entities/settings.entity';
 
 require('dotenv').config();
@@ -37,6 +38,7 @@ require('dotenv').config();
         Quest,
         GuildMember,
         News,
+        Email,
       ],
       synchronize: false,
     }),
