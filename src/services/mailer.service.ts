@@ -1,5 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { MailerService as MailerServiceLib } from '@nestjs-modules/mailer';
+import {
+  MailerSend,
+  EmailParams,
+  Sender,
+  Recipient,
+  Attachment,
+} from 'mailersend';
 import * as path from 'path';
 import * as fs from 'fs';
 
@@ -67,6 +74,11 @@ export class MailerService {
     content: string,
     locale?: string,
   ) {
+    const mailerSend = new MailerSend({
+      apiKey: process.env.MAILERSEND_API_KEY,
+    });
+    console.log(process.env.MAILERSEND_API_KEY);
+    const receivers = [];
     //Default gr if not exists
     if (!locale) {
       locale = 'gr';
@@ -82,11 +94,42 @@ export class MailerService {
       .replace('{content}', content)
       .replace(/{BASE_FRONT_URL}/g, process.env.BASE_FRONT_URL);
 
-    return this.mailerService.sendMail({
-      from: `"Reventon - GR👻" <${process.env.MAILER_USER}>`, // sender address
-      bcc: emails, // list of receivers
-      subject: subject, // Subject line
-      html: htmlTemplate, // html body
-    });
+    const sentFrom = new Sender(process.env.MAILER_USER, 'Reventon - GR👻');
+
+    for (let i = 0; i < emails.length; i++) {
+      receivers.push(
+        new EmailParams()
+          .setFrom(sentFrom)
+          .setTo([new Recipient(process.env.MAILER_USER)])
+          .setBcc([new Recipient(emails[i])])
+          .setSubject(subject)
+          //          .setHtml(htmlTemplate),
+          .setTemplateId('z86org88vq0gew13'),
+      );
+    }
+    return mailerSend.email.sendBulk(receivers);
   }
 }
+
+/*
+// using Twilio SendGrid's v3 Node.js Library
+// https://github.com/sendgrid/sendgrid-nodejs
+javascript
+const sgMail = require('@sendgrid/mail')
+sgMail.setApiKey(process.env.SENDGRID_API_KEY)
+const msg = {
+  to: 'test@example.com', // Change to your recipient
+  from: 'test@example.com', // Change to your verified sender
+  subject: 'Sending with SendGrid is Fun',
+  text: 'and easy to do anywhere, even with Node.js',
+  html: '<strong>and easy to do anywhere, even with Node.js</strong>',
+}
+sgMail
+  .send(msg)
+  .then(() => {
+    console.log('Email sent')
+  })
+  .catch((error) => {
+    console.error(error)
+  })
+   */
