@@ -518,48 +518,18 @@ export class AppController {
   async sendServerAnnouncement(@Body() body: ServerAnnouncementDto) {
     const emails: string[] =
       await this.administratorService.findAnnouncementEmails();
-    const maxMails = 100;
-    const hourPerMilliseconds = 3600000;
-    const sendTimes = Math.ceil(emails.length / maxMails);
 
-    let currentSendCount = 0;
-
-    const interval = setInterval(async () => {
-      const startIdx = currentSendCount * maxMails;
-      const endIdx = Math.min((currentSendCount + 1) * maxMails, emails.length);
-      const batchEmails = emails.slice(startIdx, endIdx);
-
-      if (batchEmails.length > 0) {
-        await this.mailerService.sendServerAnnouncement(
-          batchEmails,
-          body.subject,
-          body.title,
-          body.content,
-          'gr',
-        );
-        console.log(
-          'Στλάθηκαν επιτυχώς τα παρακάτω mails: ',
-          batchEmails,
-          ' - startIdx - ',
-          startIdx,
-          ' - endIdx- ',
-          endIdx,
-        );
-      }
-
-      currentSendCount++;
-
-      if (currentSendCount >= sendTimes) {
-        clearInterval(interval);
-        return {
-          message: 'Τα mails στάλθηκαν επιτυχώς',
-          emails: emails,
-        };
-      }
-    }, hourPerMilliseconds);
+    this.mailerService.sendServerAnnouncement(
+      emails,
+      body.subject,
+      body.title,
+      body.content,
+      'gr',
+    );
 
     return {
-      message: 'Κάτι πήγε στραβά!',
+      message: 'Τα mails στάλθηκαν επιτυχώς',
+      emails: emails,
     };
   }
 }
