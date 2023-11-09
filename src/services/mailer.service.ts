@@ -60,7 +60,7 @@ export class MailerService {
     });
   }
 
-  sendServerAnnouncement(
+  async sendServerAnnouncement(
     emails: string[],
     subject: string,
     title: string,
