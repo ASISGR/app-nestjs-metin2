@@ -2,8 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { MailerService as MailerServiceLib } from '@nestjs-modules/mailer';
 import * as path from 'path';
 import * as fs from 'fs';
-import * as ElasticEmail from '@elasticemail/elasticemail-client';
-import axios from 'axios';
 
 @Injectable()
 export class MailerService {
@@ -15,21 +13,12 @@ export class MailerService {
       locale = 'gr';
     }
 
-    //Get client instance:
-
-    const defaultClient = ElasticEmail.ApiClient.instance;
-    // Generate and use your API key (remember to check a required access level):
-    let apikey = defaultClient.authentications['apikey'];
-    apikey.apiKey = process.env.ELASTICEMAIL_API_KEY;
-
-    //Create an instance of EmailsApi that will be used to send a transactional email.
-    const api = new ElasticEmail.EmailsApi();
-
     const templatePath = path.join(
       __dirname,
       `../templates/verification-template-${locale}.html`,
     );
 
+    console.log(templatePath);
     const htmlTemplate = fs
       .readFileSync(templatePath, 'utf8')
       .replace('{real_name}', account.real_name)
@@ -40,53 +29,12 @@ export class MailerService {
       .replace('{social_id}', account.social_id)
       .replace('{hash}', hash)
       .replace(/{BASE_FRONT_URL}/g, process.env.BASE_FRONT_URL);
-
-    const emailData = ElasticEmail.EmailMessageData.constructFromObject({
-      Recipients: [new ElasticEmail.EmailRecipient(account.email)],
-      Content: {
-        Body: [
-          ElasticEmail.BodyPart.constructFromObject({
-            ContentType: 'HTML',
-            Content: htmlTemplate,
-          }),
-        ],
-
-        Subject: 'Η ΕΓΓΡΑΦΗ ΣΟΥ - REVENTON',
-        From: `Reventon - GR👻 <${process.env.MAILER_USER}>`,
-      },
+    return this.mailerService.sendMail({
+      from: `"Reventon - GR👻" <${process.env.MAILER_USER}>`, // sender address
+      to: account.email, // list of receivers
+      subject: 'Η ΕΓΓΡΑΦΗ ΣΟΥ - REVENTON', // Subject line
+      html: htmlTemplate, // html body
     });
-
-    return api
-      .emailsPost(emailData)
-      .then((response: any) => {
-        return response;
-      })
-      .catch((err: any) => {
-        return err;
-      });
-  }
-
-  async emailValidation(email: string): Promise<boolean> {
-    return axios(
-      `https://api.elasticemail.com/v4/verifications/${email}?apikey=${process.env.ELASTICEMAIL_API_KEY}`,
-      { headers: { 'Content-Type': 'application/json' }, method: 'POST' },
-    )
-      .then((response: any) => {
-        console.log(response.data);
-        if (
-          response.data.Result === 'Risky' ||
-          response.data.Result === 'Invalid' ||
-          response.data.PredictedStatus === 'HighRisk' ||
-          response.data.PredictedStatus === 'Invalid'
-        ) {
-          return false;
-        }
-        return true;
-      })
-      .catch((err: any) => {
-        console.log(err);
-        return false;
-      });
   }
 
   sendResetPassword(email: string, hash: string, locale?: string) {
@@ -94,16 +42,6 @@ export class MailerService {
     if (!locale) {
       locale = 'gr';
     }
-
-    //Get client instance:
-
-    const defaultClient = ElasticEmail.ApiClient.instance;
-    // Generate and use your API key (remember to check a required access level):
-    let apikey = defaultClient.authentications['apikey'];
-    apikey.apiKey = process.env.ELASTICEMAIL_API_KEY;
-
-    //Create an instance of EmailsApi that will be used to send a transactional email.
-    const api = new ElasticEmail.EmailsApi();
 
     const templatePath = path.join(
       __dirname,
@@ -114,28 +52,12 @@ export class MailerService {
       .replace('{hash}', hash)
       .replace(/{BASE_FRONT_URL}/g, process.env.BASE_FRONT_URL);
 
-    const emailData = ElasticEmail.EmailMessageData.constructFromObject({
-      Recipients: [new ElasticEmail.EmailRecipient(email)],
-      Content: {
-        Body: [
-          ElasticEmail.BodyPart.constructFromObject({
-            ContentType: 'HTML',
-            Content: htmlTemplate,
-          }),
-        ],
-        Subject: 'ΕΠΑΝΑΦΟΡΑ ΛΟΓΑΡΙΣΜΟΥ - REVENTON',
-        From: `Reventon - GR👻 <${process.env.MAILER_USER}>`,
-      },
+    return this.mailerService.sendMail({
+      from: `"Reventon - GR👻" <${process.env.MAILER_USER}>`, // sender address
+      to: email, // list of receivers
+      subject: 'ΕΠΑΝΑΦΟΡΑ ΛΟΓΑΡΙΣΜΟΥ - REVENTON', // Subject line
+      html: htmlTemplate, // html body
     });
-
-    return api
-      .emailsPost(emailData)
-      .then((response: any) => {
-        return response;
-      })
-      .catch((err: any) => {
-        return err;
-      });
   }
 
   async sendServerAnnouncement(

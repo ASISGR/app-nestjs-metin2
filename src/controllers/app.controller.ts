@@ -94,6 +94,18 @@ export class AppController {
     const requiredEmailVerification =
       await this.settingsService.isRegisterEmailVerification();
 
+    // Ελέγχουμε αν το e-mail που έβαλε ο χρήστης είναι ασφαλές.
+    const isValidEmail: boolean = await this.mailerService.emailValidation(
+      body.email,
+    );
+
+    if (!isValidEmail) {
+      throw new HttpException(
+        'Email is invalid please use a valid email.',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
     const usernameExist = await this.appService.usernameExists(body.login);
 
     if (usernameExist) {
@@ -119,7 +131,15 @@ export class AppController {
 
     if (requiredEmailVerification) {
       body.password = passwordWithoutHash;
-      this.mailerService.sendVerification(body, hash, 'gr');
+      this.mailerService
+        .sendVerification(body, hash, 'gr')
+        .then(() => {
+          console.log('Επιβεβαίωση στάλθηκε');
+        })
+        .catch(() => {
+          console.log('Επιβεβαίωση δεν στάλθηκε');
+        });
+
       return {
         message: `Your account has been successfully created! To get started, please check your email and follow the instructions to verify your account. Once verified, you'll be able to sign in and enjoy all the features of the game. Verification send to: ${body.email}.`,
       };
@@ -519,13 +539,27 @@ export class AppController {
     const emails: string[] =
       await this.administratorService.findAnnouncementEmails();
 
-    this.mailerService.sendServerAnnouncement(
-      emails,
-      body.subject,
-      body.title,
-      body.content,
-      'gr',
-    );
+    const sendTimes = Math.ceil(emails.length / 500);
+    const limitSendMails = 500;
+    let currentSendCount = 0;
+
+    for (let i = 0; i < sendTimes; i++) {
+      const startIdx = currentSendCount * limitSendMails;
+      const endIdx = Math.min(
+        (currentSendCount + 1) * limitSendMails,
+        emails.length,
+      );
+      const batchEmails = emails.slice(startIdx, endIdx);
+
+      await this.mailerService.sendServerAnnouncement(
+        batchEmails,
+        body.subject,
+        body.title,
+        body.content,
+        'gr',
+      );
+      currentSendCount++;
+    }
 
     return {
       message: 'Τα mails στάλθηκαν επιτυχώς',
