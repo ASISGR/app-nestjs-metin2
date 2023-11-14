@@ -10,4 +10,7 @@ export class Settings {
 
   @Column()
   registerEmailVerification: number;
+
+  @Column()
+  downloadLink: string;
 }

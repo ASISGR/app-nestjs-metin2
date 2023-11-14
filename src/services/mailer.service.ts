@@ -145,48 +145,43 @@ export class MailerService {
     content: string,
     locale?: string,
   ) {
-    /*
-    const mailerSend = new MailerSend({
-      apiKey: process.env.MAILERSEND_API_KEY,
-    });
-    console.log(process.env.MAILERSEND_API_KEY);
-    const receivers = [];
     //Default gr if not exists
     if (!locale) {
       locale = 'gr';
-    }*/
-
-    const templatePath = path.join(
-      __dirname,
-      `../templates/server-announcement-template-${locale}.html`,
-    );
-    /* const htmlTemplate = fs
-      .readFileSync(templatePath, 'utf8')
-      .replace('{title}', title)
-      .replace('{content}', content)
-      .replace(/{BASE_FRONT_URL}/g, process.env.BASE_FRONT_URL);*/
-    /*
-    const sentFrom = new Sender(process.env.MAILER_USER, 'Reventon - GR👻');
-
-    for (let i = 0; i < emails.length; i++) {
-      receivers.push(
-        new EmailParams()
-          .setFrom(sentFrom)
-          .setTo([new Recipient(emails[i])])
-          .setBcc([new Recipient(emails[i])])
-          .setSubject(subject)
-          //          .setHtml(htmlTemplate),
-          .setTemplateId('z86org88vq0gew13'),
-      );
     }
-    return mailerSend.email
-      .sendBulk(receivers)
+
+    const apiBulkUrl = `https://api.elasticemail.com/v4/emails?apikey=${process.env.ELASTICEMAIL_API_KEY}`;
+
+    return axios(apiBulkUrl, {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      method: 'POST',
+      data: {
+        Recipients: emails,
+        Content: {
+          Body: [
+            {
+              ContentType: 'HTML',
+              Content: 'string',
+              Charset: 'utf-8',
+            },
+          ],
+          //`${process.env.MAILER_USER} - Reventon - GR👻`
+          From: `Reventon - GR👻 <${process.env.MAILER_USER}>`,
+          Subject: subject,
+          TemplateName: 'ReventonMetin2Campainge',
+        },
+      },
+    })
       .then((response: any) => {
         console.log(response);
+        return response;
       })
       .catch((err: any) => {
         console.log(err);
-      });*/
+        return err;
+      });
   }
 }
 

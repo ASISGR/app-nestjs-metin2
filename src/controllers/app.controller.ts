@@ -232,6 +232,9 @@ export class AppController {
   async accountActivation(@Body() body: accountActivationDto) {
     const hash = body.hash;
 
+    const getAccountForAnnouncementEmail =
+      await this.appService.findAccountByHash(body.hash);
+
     const update = await this.appService.enableAccountByHash(hash);
     if (!update) {
       throw new HttpException(
@@ -239,6 +242,10 @@ export class AppController {
         HttpStatus.BAD_REQUEST,
       );
     }
+    // Εάν το account ενεργοποιηθεί κρατάμε το email για το newsletter.
+    this.administratorService.addAnnouncementEmail(
+      getAccountForAnnouncementEmail.email,
+    );
     return {
       message: `Your account has been successfully activated.`,
     };
@@ -361,9 +368,12 @@ export class AppController {
     const registerStatus = await this.settingsService.isRegisterEnableSetting();
     const registerEmailActivationStatus =
       await this.settingsService.isRegisterEmailVerification();
+    const downloadLink = await this.settingsService.getDownloadLink();
+
     return {
       registerStatus: registerStatus,
       registerEmailActivationStatus: registerEmailActivationStatus,
+      downloadLink: downloadLink,
     };
   }
 
@@ -536,33 +546,30 @@ export class AppController {
   @UseGuards(AuthGuard, RolesGuard)
   @Post('server-announcement')
   async sendServerAnnouncement(@Body() body: ServerAnnouncementDto) {
-    const emails: string[] =
-      await this.administratorService.findAnnouncementEmails();
+    console.log(body.emails);
 
-    const sendTimes = Math.ceil(emails.length / 500);
-    const limitSendMails = 500;
-    let currentSendCount = 0;
-
-    for (let i = 0; i < sendTimes; i++) {
-      const startIdx = currentSendCount * limitSendMails;
-      const endIdx = Math.min(
-        (currentSendCount + 1) * limitSendMails,
-        emails.length,
-      );
-      const batchEmails = emails.slice(startIdx, endIdx);
-
-      await this.mailerService.sendServerAnnouncement(
-        batchEmails,
-        body.subject,
-        body.title,
-        body.content,
-        'gr',
-      );
-      currentSendCount++;
-    }
+    await this.mailerService.sendServerAnnouncement(
+      body.emails,
+      body.subject,
+      body.title,
+      body.content,
+      'gr',
+    );
 
     return {
       message: 'Τα mails στάλθηκαν επιτυχώς',
+      emails: body.emails,
+    };
+  }
+
+  @HttpCode(200)
+  @UseGuards(AuthGuard, RolesGuard)
+  @Get('server-marketing-emails')
+  async getServerMarketingEmails() {
+    const emails: string[] =
+      await this.administratorService.findAnnouncementEmails();
+
+    return {
       emails: emails,
     };
   }

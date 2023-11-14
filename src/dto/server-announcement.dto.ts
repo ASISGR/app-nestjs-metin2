@@ -1,4 +1,10 @@
-import { IsString, Matches, IsEmail, IsOptional } from 'class-validator';
+import {
+  IsString,
+  Matches,
+  IsEmail,
+  IsOptional,
+  IsArray,
+} from 'class-validator';
 
 export class ServerAnnouncementDto {
   @IsString()
@@ -10,4 +16,8 @@ export class ServerAnnouncementDto {
   @IsOptional()
   @IsString()
   locale: string;
+
+  @IsOptional()
+  @IsArray()
+  emails: [];
 }

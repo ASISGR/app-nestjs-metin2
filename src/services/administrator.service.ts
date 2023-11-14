@@ -20,7 +20,7 @@ export class AdministratorService {
     @InjectRepository(Item) private itemRepository: Repository<Item>,
     @InjectRepository(Guild) private guildRepository: Repository<Guild>,
     @InjectRepository(News) private newsRepository: Repository<News>,
-    @InjectRepository(Email) private emailAnnouncement: Repository<Email>,
+    @InjectRepository(Email) private emailAnnouncementRep: Repository<Email>,
   ) {}
 
   async createPost(Post: CreateNewsDto): Promise<any> {
@@ -72,15 +72,29 @@ export class AdministratorService {
   }
 
   async findAnnouncementEmails() {
-    let emails = await this.emailAnnouncement
+    let emails = await this.emailAnnouncementRep
       .createQueryBuilder()
       .select(['email'])
       .execute();
 
-    emails = emails.map((obj) => {
+    /*emails = emails.map((obj) => {
       return obj.email;
-    });
+    });*/
 
     return emails;
+  }
+
+  async addAnnouncementEmail(email: string) {
+    const addedEmail = await this.emailAnnouncementRep
+      .createQueryBuilder('email')
+      .insert()
+      .values({
+        email: email,
+      })
+      .execute();
+
+    if (!addedEmail) return false;
+
+    return addedEmail;
   }
 }

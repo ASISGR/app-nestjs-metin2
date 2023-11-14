@@ -60,4 +60,15 @@ export class SettingsService {
 
     return isRegisterEnable.settings_register > 0;
   }
+
+  public async getDownloadLink() {
+    const link = await this.settingsRepository
+      .createQueryBuilder('settings')
+      .select('settings.downloadLink')
+      .getRawOne();
+
+    console.log(link);
+
+    return link.settings_downloadLink;
+  }
 }

@@ -124,6 +124,14 @@ export class AppService {
     return await this.accountRepository.save(account);
   }
 
+  async findAccountByHash(hash: string) {
+    const account = await this.accountRepository.findOne({
+      where: { status: 'BLOCK', web_aktiviert: hash },
+    });
+
+    return account;
+  }
+
   async applyPasslostToken(email: string, login: string) {
     const hash = md5(Math.random() * 10000);
 
@@ -334,7 +342,9 @@ export class AppService {
           subQuery
             .select(['dwPID', 'lValue AS collect_quest_lv'])
             .from(Quest, 'quest')
-            .where("quest.szName LIKE 'biologist'"),
+            .where("quest.szName LIKE 'biologist'")
+            .andWhere("quest.szState = 'stat'"), // Add the additional condition here
+
         'collect_quest_lv',
         'collect_quest_lv.dwPID = player.id',
       )
@@ -410,7 +420,8 @@ export class AppService {
           subQuery
             .select(['dwPID', 'lValue AS collect_quest_lv'])
             .from(Quest, 'quest')
-            .where("quest.szName LIKE 'biologist'"),
+            .where("quest.szName LIKE 'biologist'")
+            .andWhere("quest.szState = 'stat'"), // Add the additional condition here
         'collect_quest_lv',
         'collect_quest_lv.dwPID = player.id',
       )
