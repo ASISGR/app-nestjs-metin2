@@ -391,12 +391,12 @@ export class AppController {
     const registerStatus = await this.settingsService.isRegisterEnableSetting();
     const registerEmailActivationStatus =
       await this.settingsService.isRegisterEmailVerification();
-    const downloadLink = await this.settingsService.getDownloadLink();
+    const downloadLinks = await this.settingsService.getDownloadLink();
 
     return {
       registerStatus: registerStatus,
       registerEmailActivationStatus: registerEmailActivationStatus,
-      downloadLink: downloadLink,
+      downloadLinks: downloadLinks,
     };
   }
 

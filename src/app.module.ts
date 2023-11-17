@@ -24,6 +24,7 @@ import { ThrottlerModule } from '@nestjs/throttler';
 import { News } from './entities/news.entity';
 import { AdministratorService } from './services/administrator.service';
 import { Email } from './entities/serverAnnouncementMails.entity';
+import { Downloadlinks } from './entities/downloadLinks.entity';
 
 @Module({
   imports: [
@@ -48,6 +49,7 @@ import { Email } from './entities/serverAnnouncementMails.entity';
       GuildMember,
       News,
       Email,
+      Downloadlinks,
     ]),
     ThrottlerModule.forRoot({
       ttl: 60,

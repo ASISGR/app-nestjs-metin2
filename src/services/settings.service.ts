@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Account } from 'src/entities/account.entity';
+import { Downloadlinks } from 'src/entities/downloadLinks.entity';
 import { Guild } from 'src/entities/guild.entity';
 import { Item } from 'src/entities/item.entity';
 import { Player } from 'src/entities/player.entity';
@@ -19,6 +20,8 @@ export class SettingsService {
     @InjectRepository(Guild) private guildRepository: Repository<Guild>,
     @InjectRepository(Settings)
     private settingsRepository: Repository<Settings>,
+    @InjectRepository(Downloadlinks)
+    private downloadsRepository: Repository<Downloadlinks>,
   ) {}
 
   public async changeRegisterStatus(active: boolean) {
@@ -62,13 +65,8 @@ export class SettingsService {
   }
 
   public async getDownloadLink() {
-    const link = await this.settingsRepository
-      .createQueryBuilder('settings')
-      .select('settings.downloadLink')
-      .getRawOne();
+    const links = await this.downloadsRepository.createQueryBuilder().getMany();
 
-    console.log(link);
-
-    return link.settings_downloadLink;
+    return links;
   }
 }

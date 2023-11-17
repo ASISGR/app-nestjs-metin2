@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Account } from 'src/entities/account.entity';
+import { Downloadlinks } from 'src/entities/downloadLinks.entity';
 import { Guild } from 'src/entities/guild.entity';
 import { GuildMember } from 'src/entities/guild_member.entity';
 import { Item } from 'src/entities/item.entity';
@@ -39,6 +40,7 @@ require('dotenv').config();
         GuildMember,
         News,
         Email,
+        Downloadlinks,
       ],
       synchronize: false,
     }),
