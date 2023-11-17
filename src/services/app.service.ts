@@ -66,6 +66,24 @@ export class AppService {
     return hash;
   }
 
+  async accountRetryValidation(account: UserJwtTokenDto) {
+    const hash = md5(Math.random() * 10000);
+
+    const findAccount = await this.accountRepository.findOne({
+      where: { id: account.userId },
+    });
+
+    if (!findAccount || findAccount.web_aktiviert === '1') {
+      return null;
+    }
+
+    findAccount.web_aktiviert = hash;
+
+    this.accountRepository.save(findAccount);
+
+    return hash;
+  }
+
   async singIn(username: string, password: string) {
     password = hashPassword(password);
 
@@ -84,6 +102,7 @@ export class AppService {
         social_id: account.social_id,
         email: account.email,
         isAdmin: account.web_admin == 9,
+        isVerified: account.status === 'OK' && account.web_aktiviert == 1,
       };
     }
 

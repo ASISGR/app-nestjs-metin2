@@ -141,7 +141,7 @@ export class AppController {
         });
 
       return {
-        message: `Your account has been successfully created! To get started, please check your email and follow the instructions to verify your account. Once verified, you'll be able to sign in and enjoy all the features of the game. Verification send to: ${body.email}.`,
+        message: `Your account has been successfully created! To get started, please check your email and follow the instructions to verify your account. Once verified, you'll be able to sign in and enjoy all the features of the game. Verification send to: ${body.email}.\n\nYou will be redirected to your dashboard in few seconds!`,
       };
     }
 
@@ -190,6 +190,7 @@ export class AppController {
       account_status: accountFound.account_status,
       social_id: accountFound.social_id,
       isAdmin: accountFound.isAdmin,
+      isVerified: accountFound.isVerified,
     });
 
     return {
@@ -197,6 +198,28 @@ export class AppController {
       accountInfo: accountInfo,
     };
   }
+
+  @SkipThrottle(false)
+  @Throttle(1, 60)
+  @UseGuards(AuthGuard)
+  @HttpCode(200)
+  @Post('send-retry-verification')
+  async sendAccountVerification(
+    @Request() req: Request & { user: UserJwtTokenDto },
+  ) {
+    const hash: any = await this.appService.accountRetryValidation(req.user);
+
+    if (!hash) {
+      throw new HttpException('Hash not found', HttpStatus.BAD_REQUEST);
+    }
+
+    this.mailerService.sendRetryVerification(req.user, hash);
+
+    return {
+      message: `Η επιβεβαίωση εστάλη με επιτυχία στο email: ${req.user.email}`,
+    };
+  }
+
   @SkipThrottle(false)
   @Throttle(5, 10)
   @UseGuards(AuthGuard)

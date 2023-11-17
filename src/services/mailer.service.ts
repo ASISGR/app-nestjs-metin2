@@ -66,6 +66,59 @@ export class MailerService {
       });
   }
 
+  async sendRetryVerification(account: any, hash: string, locale?: string) {
+    console.log(account);
+    //Default gr if not exists
+    if (!locale) {
+      locale = 'gr';
+    }
+
+    //Get client instance:
+
+    const defaultClient = ElasticEmail.ApiClient.instance;
+    // Generate and use your API key (remember to check a required access level):
+    let apikey = defaultClient.authentications['apikey'];
+    apikey.apiKey = process.env.ELASTICEMAIL_API_KEY;
+
+    //Create an instance of EmailsApi that will be used to send a transactional email.
+    const api = new ElasticEmail.EmailsApi();
+
+    const templatePath = path.join(
+      __dirname,
+      `../templates/verification-retry-template-${locale}.html`,
+    );
+
+    const htmlTemplate = fs
+      .readFileSync(templatePath, 'utf8')
+      .replace('{username}', account.username)
+      .replace('{hash}', hash)
+      .replace(/{BASE_FRONT_URL}/g, process.env.BASE_FRONT_URL);
+
+    const emailData = ElasticEmail.EmailMessageData.constructFromObject({
+      Recipients: [new ElasticEmail.EmailRecipient(account.email)],
+      Content: {
+        Body: [
+          ElasticEmail.BodyPart.constructFromObject({
+            ContentType: 'HTML',
+            Content: htmlTemplate,
+          }),
+        ],
+
+        Subject: 'ΕΠΙΒΕΒΑΙΩΣΗ ΛΟΓΑΡΙΣΜΟΥ - REVENTON',
+        From: `Reventon - GR👻 <${process.env.MAILER_USER}>`,
+      },
+    });
+
+    return api
+      .emailsPost(emailData)
+      .then((response: any) => {
+        return response;
+      })
+      .catch((err: any) => {
+        return err;
+      });
+  }
+
   async emailValidation(email: string): Promise<boolean> {
     return axios(
       `https://api.elasticemail.com/v4/verifications/${email}?apikey=${process.env.ELASTICEMAIL_API_KEY}`,
