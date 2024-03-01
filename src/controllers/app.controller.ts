@@ -569,15 +569,25 @@ export class AppController {
   @UseGuards(AuthGuard, RolesGuard)
   @Post('server-announcement')
   async sendServerAnnouncement(@Body() body: ServerAnnouncementDto) {
-    console.log(body.emails);
+    const batchEmails = 100;
 
-    await this.mailerService.sendServerAnnouncement(
-      body.emails,
-      body.subject,
-      body.title,
-      body.content,
-      'gr',
-    );
+    for (let i = 0; i < body.emails.length; i += batchEmails) {
+      const batchSend = body.emails.slice(i, i + batchEmails);
+
+      // Στείλε τα emails του τρέχοντος batch
+      console.log(i);
+
+      console.log(batchSend);
+      await this.mailerService.sendServerAnnouncement(
+        batchSend,
+        body.subject,
+        body.title,
+        body.content,
+        'gr',
+      );
+      // Καθυστέρηση για 5 δευτερόλεπτα
+      await this.delayAsync(5000);
+    }
 
     return {
       message: 'Τα mails στάλθηκαν επιτυχώς',
@@ -595,5 +605,9 @@ export class AppController {
     return {
       emails: emails,
     };
+  }
+
+  delayAsync(ms: number) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 }
