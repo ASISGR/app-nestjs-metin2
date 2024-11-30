@@ -176,8 +176,8 @@ export class MailerService {
             Content: htmlTemplate,
           }),
         ],
-        Subject: 'ΕΠΑΝΑΦΟΡΑ ΛΟΓΑΡΙΣΜΟΥ - REVENTON',
-        From: `Reventon - GR👻 <${process.env.MAILER_USER}>`,
+        Subject: 'ΕΠΑΝΑΦΟΡΑ ΛΟΓΑΡΙΣΜΟΥ - ASCEO2',
+        From: `Asceo2 - GR👻 <${process.env.MAILER_USER}>`,
       },
     });
 
