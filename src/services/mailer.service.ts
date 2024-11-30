@@ -51,8 +51,8 @@ export class MailerService {
           }),
         ],
 
-        Subject: 'Η ΕΓΓΡΑΦΗ ΣΟΥ - REVENTON',
-        From: `Reventon - GR👻 <${process.env.MAILER_USER}>`,
+        Subject: 'Η ΕΓΓΡΑΦΗ ΣΟΥ - ASCEO2',
+        From: `Asceo2 - GR👻 <${process.env.MAILER_USER}>`,
       },
     });
 
@@ -104,8 +104,8 @@ export class MailerService {
           }),
         ],
 
-        Subject: 'ΕΠΙΒΕΒΑΙΩΣΗ ΛΟΓΑΡΙΣΜΟΥ - REVENTON',
-        From: `Reventon - GR👻 <${process.env.MAILER_USER}>`,
+        Subject: 'ΕΠΙΒΕΒΑΙΩΣΗ ΛΟΓΑΡΙΣΜΟΥ - ASCEO2',
+        From: `Asceo2 - GR👻 <${process.env.MAILER_USER}>`,
       },
     });
 
@@ -194,8 +194,8 @@ export class MailerService {
   async sendServerAnnouncement(
     emails: string[],
     subject: string,
-    title: string,
-    content: string,
+    title?: string,
+    content?: string,
     locale?: string,
   ) {
     //Default gr if not exists
@@ -205,13 +205,17 @@ export class MailerService {
 
     const apiBulkUrl = `https://api.elasticemail.com/v4/emails?apikey=${process.env.ELASTICEMAIL_API_KEY}`;
 
+    const emailsMapping = emails.map((object) => {
+      return { Email: object };
+    });
+
     return axios(apiBulkUrl, {
       headers: {
         'Content-Type': 'application/json',
       },
       method: 'POST',
       data: {
-        Recipients: emails,
+        Recipients: emailsMapping,
         Content: {
           Body: [
             {
@@ -221,9 +225,9 @@ export class MailerService {
             },
           ],
           //`${process.env.MAILER_USER} - Reventon - GR👻`
-          From: `Reventon - GR👻 <${process.env.MAILER_USER}>`,
+          From: `Asceo2 - GR👻 <${process.env.MAILER_USER}>`,
           Subject: subject,
-          TemplateName: 'ReventonMetin2Campainge',
+          TemplateName: 'AsceoMetin2Campainge',
         },
       },
     })

@@ -15,6 +15,7 @@ import { Safebox } from 'src/entities/safebox.entity';
 import { Email } from 'src/entities/serverAnnouncementMails.entity';
 import { Settings } from 'src/entities/settings.entity';
 
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 require('dotenv').config();
 
 @Module({

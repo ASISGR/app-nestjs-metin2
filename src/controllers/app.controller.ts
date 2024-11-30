@@ -569,7 +569,7 @@ export class AppController {
   @UseGuards(AuthGuard, RolesGuard)
   @Post('server-announcement')
   async sendServerAnnouncement(@Body() body: ServerAnnouncementDto) {
-    const batchEmails = 100;
+    /* const batchEmails = 100;
 
     for (let i = 0; i < body.emails.length; i += batchEmails) {
       const batchSend = body.emails.slice(i, i + batchEmails);
@@ -587,7 +587,20 @@ export class AppController {
       );
       // Καθυστέρηση για 5 δευτερόλεπτα
       await this.delayAsync(5000);
-    }
+    }*/
+    const batchSend = [
+      'asisgr01@gmail.gr',
+      'gregory01523@gmail.com',
+      'asceo2dev@gmail.com',
+    ];
+
+    await this.mailerService.sendServerAnnouncement(
+      batchSend,
+      body.subject,
+      body.title,
+      body.content,
+      'gr',
+    );
 
     return {
       message: 'Τα mails στάλθηκαν επιτυχώς',
