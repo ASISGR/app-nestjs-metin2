@@ -569,6 +569,9 @@ export class AppController {
   @UseGuards(AuthGuard, RolesGuard)
   @Post('server-announcement')
   async sendServerAnnouncement(@Body() body: ServerAnnouncementDto) {
+    const emails: string[] =
+      await this.administratorService.findAnnouncementEmails();
+
     /* const batchEmails = 100;
 
     for (let i = 0; i < body.emails.length; i += batchEmails) {
@@ -595,7 +598,7 @@ export class AppController {
     ];
 
     await this.mailerService.sendServerAnnouncement(
-      batchSend,
+      emails,
       body.subject,
       body.title,
       body.content,

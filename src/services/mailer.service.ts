@@ -205,9 +205,9 @@ export class MailerService {
 
     const apiBulkUrl = `https://api.elasticemail.com/v4/emails?apikey=${process.env.ELASTICEMAIL_API_KEY}`;
 
-    const emailsMapping = emails.map((object) => {
+    /*  const emailsMapping = emails.map((object) => {
       return { Email: object };
-    });
+    });*/
 
     return axios(apiBulkUrl, {
       headers: {
@@ -215,7 +215,7 @@ export class MailerService {
       },
       method: 'POST',
       data: {
-        Recipients: emailsMapping,
+        Recipients: emails,
         Content: {
           Body: [
             {
