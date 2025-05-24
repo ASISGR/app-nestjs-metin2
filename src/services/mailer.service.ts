@@ -19,7 +19,7 @@ export class MailerService {
 
     const defaultClient = ElasticEmail.ApiClient.instance;
     // Generate and use your API key (remember to check a required access level):
-    let apikey = defaultClient.authentications['apikey'];
+    const apikey = defaultClient.authentications['apikey'];
     apikey.apiKey = process.env.ELASTICEMAIL_API_KEY;
 
     //Create an instance of EmailsApi that will be used to send a transactional email.
@@ -51,8 +51,8 @@ export class MailerService {
           }),
         ],
 
-        Subject: 'Η ΕΓΓΡΑΦΗ ΣΟΥ - ASCEO2',
-        From: `Asceo2 - GR👻 <${process.env.MAILER_USER}>`,
+        Subject: 'Η ΕΓΓΡΑΦΗ ΣΟΥ - AEOLUS2',
+        From: `AEOLUS2 - GR👻 <${process.env.MAILER_USER}>`,
       },
     });
 
@@ -77,7 +77,7 @@ export class MailerService {
 
     const defaultClient = ElasticEmail.ApiClient.instance;
     // Generate and use your API key (remember to check a required access level):
-    let apikey = defaultClient.authentications['apikey'];
+    const apikey = defaultClient.authentications['apikey'];
     apikey.apiKey = process.env.ELASTICEMAIL_API_KEY;
 
     //Create an instance of EmailsApi that will be used to send a transactional email.
@@ -104,8 +104,8 @@ export class MailerService {
           }),
         ],
 
-        Subject: 'ΕΠΙΒΕΒΑΙΩΣΗ ΛΟΓΑΡΙΣΜΟΥ - ASCEO2',
-        From: `Asceo2 - GR👻 <${process.env.MAILER_USER}>`,
+        Subject: 'ΕΠΙΒΕΒΑΙΩΣΗ ΛΟΓΑΡΙΣΜΟΥ - AEOLUS2',
+        From: `AEOLUS2 - GR👻 <${process.env.MAILER_USER}>`,
       },
     });
 
@@ -152,7 +152,7 @@ export class MailerService {
 
     const defaultClient = ElasticEmail.ApiClient.instance;
     // Generate and use your API key (remember to check a required access level):
-    let apikey = defaultClient.authentications['apikey'];
+    const apikey = defaultClient.authentications['apikey'];
     apikey.apiKey = process.env.ELASTICEMAIL_API_KEY;
 
     //Create an instance of EmailsApi that will be used to send a transactional email.
@@ -176,8 +176,8 @@ export class MailerService {
             Content: htmlTemplate,
           }),
         ],
-        Subject: 'ΕΠΑΝΑΦΟΡΑ ΛΟΓΑΡΙΣΜΟΥ - ASCEO2',
-        From: `Asceo2 - GR👻 <${process.env.MAILER_USER}>`,
+        Subject: 'ΕΠΑΝΑΦΟΡΑ ΛΟΓΑΡΙΣΜΟΥ - AEOLUS2',
+        From: `AEOLUS2 - GR👻 <${process.env.MAILER_USER}>`,
       },
     });
 
@@ -225,9 +225,9 @@ export class MailerService {
             },
           ],
           //`${process.env.MAILER_USER} - Reventon - GR👻`
-          From: `Asceo2 - GR👻 <${process.env.MAILER_USER}>`,
+          From: `AEOLUS2 - GR👻 <${process.env.MAILER_USER}>`,
           Subject: subject,
-          TemplateName: 'AsceoMetin2Campainge',
+          TemplateName: 'AeolusMetin2Campainge',
         },
       },
     })
