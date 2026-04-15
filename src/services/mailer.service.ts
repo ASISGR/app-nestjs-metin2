@@ -2,193 +2,84 @@ import { Injectable } from '@nestjs/common';
 import { MailerService as MailerServiceLib } from '@nestjs-modules/mailer';
 import * as path from 'path';
 import * as fs from 'fs';
-import * as ElasticEmail from '@elasticemail/elasticemail-client';
-import axios from 'axios';
 
 @Injectable()
 export class MailerService {
-  constructor(private mailerService: MailerServiceLib) {}
+  constructor(private readonly mailerService: MailerServiceLib) {}
 
-  async sendVerification(account: any, hash: string, locale?: string) {
-    //Default gr if not exists
-    if (!locale) {
-      locale = 'gr';
-    }
+  private getLocale(locale?: string): string {
+    return locale || 'gr';
+  }
 
-    //Get client instance:
+  private getFrom(): string {
+    return `"${process.env.MAILER_FROM_NAME || 'REVENTON'}" <${process.env.MAILER_FROM_EMAIL}>`;
+  }
 
-    const defaultClient = ElasticEmail.ApiClient.instance;
-    // Generate and use your API key (remember to check a required access level):
-    const apikey = defaultClient.authentications['apikey'];
-    apikey.apiKey = process.env.ELASTICEMAIL_API_KEY;
-
-    //Create an instance of EmailsApi that will be used to send a transactional email.
-    const api = new ElasticEmail.EmailsApi();
-
+  private loadTemplate(templateName: string, locale: string): string {
     const templatePath = path.join(
       __dirname,
-      `../templates/verification-template-${locale}.html`,
+      `../templates/${templateName}-${locale}.html`,
     );
 
-    const htmlTemplate = fs
-      .readFileSync(templatePath, 'utf8')
-      .replace('{real_name}', account.real_name)
-      .replace('{login}', account.login)
-      .replace('{password}', account.password)
-      .replace('{question1}', account.question1)
-      .replace('{answer1}', account.answer1)
-      .replace('{social_id}', account.social_id)
-      .replace('{hash}', hash)
-      .replace(/{BASE_FRONT_URL}/g, process.env.BASE_FRONT_URL);
+    return fs.readFileSync(templatePath, 'utf8');
+  }
 
-    const emailData = ElasticEmail.EmailMessageData.constructFromObject({
-      Recipients: [new ElasticEmail.EmailRecipient(account.email)],
-      Content: {
-        Body: [
-          ElasticEmail.BodyPart.constructFromObject({
-            ContentType: 'HTML',
-            Content: htmlTemplate,
-          }),
-        ],
-
-        Subject: 'Η ΕΓΓΡΑΦΗ ΣΟΥ - AEOLUS2',
-        From: `AEOLUS2 - GR👻 <${process.env.MAILER_USER}>`,
-      },
+  private async sendHtmlMail(to: string | string[], subject: string, html: string) {
+    return this.mailerService.sendMail({
+      to,
+      from: this.getFrom(),
+      subject,
+      html,
     });
+  }
 
-    return api
-      .emailsPost(emailData)
-      .then((response: any) => {
-        return response;
-      })
-      .catch((err: any) => {
-        return err;
-      });
+  async sendVerification(account: any, hash: string, locale?: string) {
+    locale = this.getLocale(locale);
+
+    const htmlTemplate = this.loadTemplate('verification-template', locale)
+      .replace('{real_name}', account.real_name ?? '')
+      .replace('{login}', account.login ?? '')
+      .replace('{password}', account.password ?? '')
+      .replace('{question1}', account.question1 ?? '')
+      .replace('{answer1}', account.answer1 ?? '')
+      .replace('{social_id}', account.social_id ?? '')
+      .replace('{hash}', hash)
+      .replace(/{BASE_FRONT_URL}/g, process.env.BASE_FRONT_URL || '');
+
+    return this.sendHtmlMail(
+      account.email,
+      'Η ΕΓΓΡΑΦΗ ΣΟΥ - REVENTON',
+      htmlTemplate,
+    );
   }
 
   async sendRetryVerification(account: any, hash: string, locale?: string) {
-    console.log(account);
-    //Default gr if not exists
-    if (!locale) {
-      locale = 'gr';
-    }
+    locale = this.getLocale(locale);
 
-    //Get client instance:
-
-    const defaultClient = ElasticEmail.ApiClient.instance;
-    // Generate and use your API key (remember to check a required access level):
-    const apikey = defaultClient.authentications['apikey'];
-    apikey.apiKey = process.env.ELASTICEMAIL_API_KEY;
-
-    //Create an instance of EmailsApi that will be used to send a transactional email.
-    const api = new ElasticEmail.EmailsApi();
-
-    const templatePath = path.join(
-      __dirname,
-      `../templates/verification-retry-template-${locale}.html`,
-    );
-
-    const htmlTemplate = fs
-      .readFileSync(templatePath, 'utf8')
-      .replace('{username}', account.username)
+    const htmlTemplate = this.loadTemplate('verification-retry-template', locale)
+      .replace('{username}', account.username ?? account.login ?? '')
       .replace('{hash}', hash)
-      .replace(/{BASE_FRONT_URL}/g, process.env.BASE_FRONT_URL);
+      .replace(/{BASE_FRONT_URL}/g, process.env.BASE_FRONT_URL || '');
 
-    const emailData = ElasticEmail.EmailMessageData.constructFromObject({
-      Recipients: [new ElasticEmail.EmailRecipient(account.email)],
-      Content: {
-        Body: [
-          ElasticEmail.BodyPart.constructFromObject({
-            ContentType: 'HTML',
-            Content: htmlTemplate,
-          }),
-        ],
-
-        Subject: 'ΕΠΙΒΕΒΑΙΩΣΗ ΛΟΓΑΡΙΣΜΟΥ - AEOLUS2',
-        From: `AEOLUS2 - GR👻 <${process.env.MAILER_USER}>`,
-      },
-    });
-
-    return api
-      .emailsPost(emailData)
-      .then((response: any) => {
-        return response;
-      })
-      .catch((err: any) => {
-        return err;
-      });
+    return this.sendHtmlMail(
+      account.email,
+      'ΕΠΙΒΕΒΑΙΩΣΗ ΛΟΓΑΡΙΣΜΟΥ - REVENTON',
+      htmlTemplate,
+    );
   }
 
-  async emailValidation(email: string): Promise<boolean> {
-    return axios(
-      `https://api.elasticemail.com/v4/verifications/${email}?apikey=${process.env.ELASTICEMAIL_API_KEY}`,
-      { headers: { 'Content-Type': 'application/json' }, method: 'POST' },
-    )
-      .then((response: any) => {
-        console.log(response.data);
-        if (
-          response.data.Result === 'Risky' ||
-          response.data.Result === 'Invalid' ||
-          response.data.PredictedStatus === 'HighRisk' ||
-          response.data.PredictedStatus === 'Invalid'
-        ) {
-          return false;
-        }
-        return true;
-      })
-      .catch((err: any) => {
-        console.log(err);
-        return false;
-      });
-  }
+  async sendResetPassword(email: string, hash: string, locale?: string) {
+    locale = this.getLocale(locale);
 
-  sendResetPassword(email: string, hash: string, locale?: string) {
-    //Default gr if not exists
-    if (!locale) {
-      locale = 'gr';
-    }
-
-    //Get client instance:
-
-    const defaultClient = ElasticEmail.ApiClient.instance;
-    // Generate and use your API key (remember to check a required access level):
-    const apikey = defaultClient.authentications['apikey'];
-    apikey.apiKey = process.env.ELASTICEMAIL_API_KEY;
-
-    //Create an instance of EmailsApi that will be used to send a transactional email.
-    const api = new ElasticEmail.EmailsApi();
-
-    const templatePath = path.join(
-      __dirname,
-      `../templates/reset-password-template-${locale}.html`,
-    );
-    const htmlTemplate = fs
-      .readFileSync(templatePath, 'utf8')
+    const htmlTemplate = this.loadTemplate('reset-password-template', locale)
       .replace('{hash}', hash)
-      .replace(/{BASE_FRONT_URL}/g, process.env.BASE_FRONT_URL);
+      .replace(/{BASE_FRONT_URL}/g, process.env.BASE_FRONT_URL || '');
 
-    const emailData = ElasticEmail.EmailMessageData.constructFromObject({
-      Recipients: [new ElasticEmail.EmailRecipient(email)],
-      Content: {
-        Body: [
-          ElasticEmail.BodyPart.constructFromObject({
-            ContentType: 'HTML',
-            Content: htmlTemplate,
-          }),
-        ],
-        Subject: 'ΕΠΑΝΑΦΟΡΑ ΛΟΓΑΡΙΣΜΟΥ - AEOLUS2',
-        From: `AEOLUS2 - GR👻 <${process.env.MAILER_USER}>`,
-      },
-    });
-
-    return api
-      .emailsPost(emailData)
-      .then((response: any) => {
-        return response;
-      })
-      .catch((err: any) => {
-        return err;
-      });
+    return this.sendHtmlMail(
+      email,
+      'ΕΠΑΝΑΦΟΡΑ ΛΟΓΑΡΙΣΜΟΥ - REVENTON',
+      htmlTemplate,
+    );
   }
 
   async sendServerAnnouncement(
@@ -198,69 +89,21 @@ export class MailerService {
     content?: string,
     locale?: string,
   ) {
-    //Default gr if not exists
-    if (!locale) {
-      locale = 'gr';
-    }
+    locale = this.getLocale(locale);
 
-    const apiBulkUrl = `https://api.elasticemail.com/v4/emails?apikey=${process.env.ELASTICEMAIL_API_KEY}`;
+    let html = `
+      <div style="font-family: Arial, Helvetica, sans-serif; line-height: 1.6;">
+        <h1>${title || 'REVENTON'}</h1>
+        <div>${content || ''}</div>
+      </div>
+    `;
 
-    /*  const emailsMapping = emails.map((object) => {
-      return { Email: object };
-    });*/
+    return this.sendHtmlMail(emails, subject, html);
+  }
 
-    return axios(apiBulkUrl, {
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      method: 'POST',
-      data: {
-        Recipients: emails,
-        Content: {
-          Body: [
-            {
-              ContentType: 'HTML',
-              Content: 'string',
-              Charset: 'utf-8',
-            },
-          ],
-          //`${process.env.MAILER_USER} - Reventon - GR👻`
-          From: `AEOLUS2 - GR👻 <${process.env.MAILER_USER}>`,
-          Subject: subject,
-          TemplateName: 'AeolusMetin2Campainge',
-        },
-      },
-    })
-      .then((response: any) => {
-        console.log(response);
-        return response;
-      })
-      .catch((err: any) => {
-        console.log(err);
-        return err;
-      });
+  async emailValidation(email: string): Promise<boolean> {
+    // Με SMTP2GO δεν χρειάζεται να κρατήσεις ElasticEmail validation logic.
+    // Κρατάμε προσωρινά basic validation για να μη σπάσει το flow.
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   }
 }
-
-/*
-// using Twilio SendGrid's v3 Node.js Library
-// https://github.com/sendgrid/sendgrid-nodejs
-javascript
-const sgMail = require('@sendgrid/mail')
-sgMail.setApiKey(process.env.SENDGRID_API_KEY)
-const msg = {
-  to: 'test@example.com', // Change to your recipient
-  from: 'test@example.com', // Change to your verified sender
-  subject: 'Sending with SendGrid is Fun',
-  text: 'and easy to do anywhere, even with Node.js',
-  html: '<strong>and easy to do anywhere, even with Node.js</strong>',
-}
-sgMail
-  .send(msg)
-  .then(() => {
-    console.log('Email sent')
-  })
-  .catch((error) => {
-    console.error(error)
-  })
-   */
