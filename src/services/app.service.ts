@@ -44,7 +44,6 @@ export class AppService {
 
   async createAccount(account: any, isAccVerificationActive: boolean) {
     const hash = md5(Math.random() * 10000);
-     console.log('test')
 
     account.create_time = new Date();
 
@@ -97,9 +96,7 @@ export class AppService {
     account.hdd_serial = '';
 
     account.password = hashPassword(account.password);
-     console.log(account)
    const isCreated = await this.accountRepository.save(account);
-    console.log(isCreated)
 
     if (!isCreated) {
       return false;
