@@ -432,7 +432,7 @@ export class AppController {
   @Post('verifyRecaptcha')
   async recaptchaVerification(@Body() body: RecaptchaDTO) {
     const verify: any = await this.appService.recaptcha(
-      body.secret,
+      process.env.RECAPTCHA_SECRET_KEY,
       body.response,
     );
 

@@ -44,6 +44,7 @@ export class AppService {
 
   async createAccount(account: any, isAccVerificationActive: boolean) {
     const hash = md5(Math.random() * 10000);
+     console.log('test')
 
     account.create_time = new Date();
 
@@ -55,9 +56,50 @@ export class AppService {
       ? (account.web_aktiviert = hash)
       : (account.web_aktiviert = '1');
 
-    account.password = hashPassword(account.password);
+    // REQUIRED DEFAULTS
+    account.last_play = '0000-00-00 00:00:00';
+    account.phone1 = '';
+    account.phone2 = '';
+    account.address = '';
+    account.zipcode = '';
+    account.question2 = '';
+    account.answer2 = '';
+    account.is_testor = '0';
+    account.securitycode = '';
+    account.newsletter = '0';
+    account.empire = '0';
+    account.name_checked = '0';
+    account.availDt = new Date();
+    account.mileage = '0';
+    account.cash = '0';
+    account.gold_expire = '0000-00-00 00:00:00';
+    account.silver_expire = '0000-00-00 00:00:00';
+    account.safebox_expire = '0000-00-00 00:00:00';
+    account.autoloot_expire = '0000-00-00 00:00:00';
+    account.fish_mind_expire = '0000-00-00 00:00:00';
+    account.marriage_fast_expire = '0000-00-00 00:00:00';
+    account.money_drop_rate_expire = '0000-00-00 00:00:00';
+    account.ttl_cash = '0';
+    account.ttl_mileage = '0';
+    account.channel_company = '';
+    account.coins = '0';
+    account.web_admin = '0';
+    account.web_ip = '';
+    account.jcoins = '0';
+    account.deletion_token = '';
+    account.passlost_token = '';
+    account.email_token = '';
+    account.new_email = '';
+    account.cpu_id = '';
+    account.hdd_model = '';
+    account.machine_guid = '';
+    account.mac_addr = '';
+    account.hdd_serial = '';
 
-    const isCreated = await this.accountRepository.save(account);
+    account.password = hashPassword(account.password);
+     console.log(account)
+   const isCreated = await this.accountRepository.save(account);
+    console.log(isCreated)
 
     if (!isCreated) {
       return false;
