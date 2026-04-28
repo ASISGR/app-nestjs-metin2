@@ -57,4 +57,8 @@ export class CreateAccountDto {
   @MaxLength(50)
   @IsNotEmpty()
   answer1: string;
+
+  @IsString()
+  @IsNotEmpty()
+  recaptchaToken: string;
 }

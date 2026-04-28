@@ -79,9 +79,31 @@ export class AppController {
     };
   }
 
+  @SkipThrottle(false)
+  @Throttle(3, 60)
   @HttpCode(201)
   @Post('create')
   async create(@Body() body: CreateAccountDto) {
+    const verify: any = await this.appService.recaptcha(
+      process.env.RECAPTCHA_SECRET_KEY,
+      body.recaptchaToken,
+    );
+
+    if (
+      !verify?.data?.success ||
+      verify?.data?.action !== 'register' ||
+      verify?.data?.score < 0.5
+    ) {
+      console.log('Register recaptcha failed:', verify?.data);
+
+      throw new HttpException(
+        'Recaptcha verification failed.',
+        HttpStatus.FORBIDDEN,
+      );
+    }
+
+    delete (body as any).recaptchaToken;
+
     if ((await this.settingsService.isRegisterEnableSetting()) === false) {
       throw new HttpException(
         'Register is deactivated.',
@@ -94,7 +116,6 @@ export class AppController {
     const requiredEmailVerification =
       await this.settingsService.isRegisterEmailVerification();
 
-    // Ελέγχουμε αν το e-mail που έβαλε ο χρήστης είναι ασφαλές.
     const isValidEmail: boolean = await this.mailerService.emailValidation(
       body.email,
     );
@@ -113,6 +134,7 @@ export class AppController {
     }
 
     const emailExists = await this.appService.emailExists(body.email);
+
     if (emailExists) {
       throw new HttpException('Email in use.', HttpStatus.BAD_REQUEST);
     }
@@ -131,6 +153,7 @@ export class AppController {
 
     if (requiredEmailVerification) {
       body.password = passwordWithoutHash;
+
       this.mailerService
         .sendVerification(body, hash, 'gr')
         .then(() => {
