@@ -20,4 +20,8 @@ export class LoginUserDto {
   @MaxLength(16)
   @IsNotEmpty()
   password: string;
+
+  @IsString()
+  @IsNotEmpty()
+  recaptchaToken: string;
 }

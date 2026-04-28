@@ -173,55 +173,74 @@ export class AppController {
     };
   }
 
-  @SkipThrottle(false)
-  @Throttle(5, 10)
-  @HttpCode(200)
-  @Post('login')
-  async login(@Body() body: LoginUserDto) {
-    const token: any = await this.authService.signIn(body.login, body.password);
+@SkipThrottle(false)
+@Throttle(5, 10)
+@HttpCode(200)
+@Post('login')
+async login(@Body() body: LoginUserDto) {
+  const verify: any = await this.appService.recaptcha(
+    process.env.RECAPTCHA_SECRET_KEY,
+    body.recaptchaToken,
+  );
 
-    if (!token) {
-      throw new HttpException('Forbidden', HttpStatus.FORBIDDEN);
-    }
+  if (
+    !verify?.data?.success ||
+    verify?.data?.action !== 'login' ||
+    verify?.data?.score < 0.5
+  ) {
+    console.log('Login recaptcha failed:', verify?.data);
 
-    const accountFound = await this.appService.singIn(
-      body.login,
-      body.password,
+    throw new HttpException(
+      'Recaptcha verification failed.',
+      HttpStatus.FORBIDDEN,
     );
+  }
 
-    if (!accountFound) {
-      throw new HttpException(
-        `Account doesn't exist.`,
-        HttpStatus.UNAUTHORIZED,
-      );
-    }
-    const accountInfo = await this.appService.userInformation(token.userId);
+  const token: any = await this.authService.signIn(body.login, body.password);
 
-    if (!accountInfo) {
-      return {
-        access_token: token.access_token,
-        accountInfo: null,
-      };
-    }
-    Object.assign(accountInfo, {
-      userId: accountFound.userId,
-      login: accountFound.login,
-      coins: accountFound.coins,
-      jcoins: accountFound.jcoins,
-      email: accountFound.email,
-      last_play: accountFound.last_play,
-      account_status: accountFound.account_status,
-      social_id: accountFound.social_id,
-      isAdmin: accountFound.isAdmin,
-      isVerified: accountFound.isVerified,
-    });
+  if (!token) {
+    throw new HttpException('Forbidden', HttpStatus.FORBIDDEN);
+  }
 
+  const accountFound = await this.appService.singIn(
+    body.login,
+    body.password,
+  );
+
+  if (!accountFound) {
+    throw new HttpException(
+      `Account doesn't exist.`,
+      HttpStatus.UNAUTHORIZED,
+    );
+  }
+
+  const accountInfo = await this.appService.userInformation(token.userId);
+
+  if (!accountInfo) {
     return {
       access_token: token.access_token,
-      accountInfo: accountInfo,
+      accountInfo: null,
     };
   }
 
+  Object.assign(accountInfo, {
+    userId: accountFound.userId,
+    login: accountFound.login,
+    coins: accountFound.coins,
+    jcoins: accountFound.jcoins,
+    email: accountFound.email,
+    last_play: accountFound.last_play,
+    account_status: accountFound.account_status,
+    social_id: accountFound.social_id,
+    isAdmin: accountFound.isAdmin,
+    isVerified: accountFound.isVerified,
+  });
+
+  return {
+    access_token: token.access_token,
+    accountInfo: accountInfo,
+  };
+}
   @SkipThrottle(false)
   @Throttle(1, 60)
   @UseGuards(AuthGuard)
