@@ -45,7 +45,7 @@ export class StatisticService {
 
   async sumOfPlayersOnline(): Promise<string> {
     const currentTime = new Date();
-    const minusTime = new Date(currentTime.getTime() - 600000); // 600000 -> 10 Minutes | 300.000 -> 5 Minutes
+    const minusTime = new Date(currentTime.getTime() - 1200000); // 1800000 -> 30 Minutes | 1200000 -> 20 Minutes | 600000 -> 10 Minutes | 300.000 -> 5 Minutes
 
     const result = await this.playerRepository
       .createQueryBuilder()
